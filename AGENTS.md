@@ -80,9 +80,10 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 | Topic | Path |
 | --- | --- |
 | forms-ui overview | `apps/client/node_modules/@taylordb/forms-ui/llm.txt` |
+| forms-ui `<Form>` props + **UI locale** | `apps/client/node_modules/@taylordb/forms-ui/docs/form-api.md` |
 | forms-ui inputs | `apps/client/node_modules/@taylordb/forms-ui/docs/inputs.md` |
 | Autosave (fetch + tRPC) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
-| Theming, hooks, exports | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
+| Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
 | Recipes & pitfalls | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
 | Bigger example | `apps/client/node_modules/@taylordb/forms-ui/example.md` |
 | forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
@@ -188,6 +189,49 @@ considers hidden.
 Edit `purpleTheme` in `CandidateFormPage.tsx`. Available tokens are in
 the theming doc linked above. The page background gradient lives in
 `apps/client/src/index.css`.
+
+### Translate built-in UI strings (locale)
+
+`@taylordb/forms-ui` ships a `locale` prop on `<Form>` (and
+`FormProvider`) that overrides **library-owned** strings only: footer
+labels, keyboard hint, dropdown search defaults, media recorder labels,
+ranking move labels, composite placeholders, the submitted-button
+label, etc. Your own `<Title>`, `<Description>`, choice labels, and
+JSX-supplied placeholders are NOT touched.
+
+Use a packaged locale (tree-shakeable):
+
+```tsx
+import { Form } from "@taylordb/forms-ui";
+import { deFormLocale } from "@taylordb/forms-ui/locales/de";
+
+<Form locale={deFormLocale} theme={purpleTheme} adapter={adapter}>
+  …
+</Form>
+```
+
+Packaged locales:
+
+* `@taylordb/forms-ui/locales/de` → `deFormLocale`
+* `@taylordb/forms-ui/locales/ru` → `ruFormLocale`
+
+Patch a few strings on top of English defaults:
+
+```tsx
+import { Form, mergeFormLocale } from "@taylordb/forms-ui";
+
+const locale = mergeFormLocale({
+  controls: { defaultNextLabel: "Next" },
+  screens: { submitted: "Thanks!" },
+});
+
+<Form locale={locale}>…</Form>
+```
+
+Read the merged strings from any child via `useFormLocale()`. Full API:
+`apps/client/node_modules/@taylordb/forms-ui/docs/form-api.md` (the
+"UI locale" section) and the exports list in
+`docs/hooks-theming-exports.md`.
 
 ### Wire up email-on-submit
 

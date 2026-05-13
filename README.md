@@ -182,9 +182,10 @@ behaviour:
 | Topic | Path |
 | --- | --- |
 | forms-ui overview | `apps/client/node_modules/@taylordb/forms-ui/llm.txt` |
+| forms-ui `<Form>` props + **UI locale** | `apps/client/node_modules/@taylordb/forms-ui/docs/form-api.md` |
 | forms-ui inputs (TextInput, FileUpload, …) | `apps/client/node_modules/@taylordb/forms-ui/docs/inputs.md` |
 | Autosave (fetch + tRPC variants) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
-| Theming, hooks, exports | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
+| Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
 | Recipes & gotchas | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
 | forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
 | forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |

@@ -213,11 +213,19 @@ export const candidateFormRouter = router({
       z.object({
         sessionId: z.number(),
         stepId: z.string(),
-        value: z.unknown(),
+        // Optional: JSON clients often omit keys set to `undefined`, and optional
+        // steps may legitimately persist an absent value.
+        value: z.unknown().optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
-      actions.saveAnswer(ctx, input).catch(toTrpcError),
+      actions
+        .saveAnswer(ctx, {
+          sessionId: input.sessionId,
+          stepId: input.stepId,
+          value: input.value,
+        })
+        .catch(toTrpcError),
     ),
 
   submitForm: publicProcedure
