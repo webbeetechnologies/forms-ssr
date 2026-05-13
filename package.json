@@ -1,0 +1,17 @@
+{
+  "name": "taylordb-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @repo/client build",
+    "build:server": "pnpm --filter @repo/server build",
+    "build:all": "pnpm build && pnpm build:server",
+    "lint": "eslint apps",
+    "generate:schema": "pnpx @taylordb/cli generate-schema"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "typescript": "~5.9.3"
+  }
+}

@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://server-vms.develop.taylordb.ai/apps/config-schema/v1
+
+version: 1
+
+project: blank
+
+runtime:
+  type: node
+  version: 20
+  packageManager: pnpm
+
+services:
+  server:
+    workDir: apps/server
+    install:
+      commands:
+        - pnpm install
+    dev:
+      command: pnpm dev
+      port: 3000
+      env:
+        vars:
+          TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
+          TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
+          FRONTEND_URL: routing.client.url
+
+    start:
+      command: pnpm start --port 3000
+      port: 3000
+      env:
+        vars:
+          TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
+          TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
+          FRONTEND_URL: routing.client.url
+      
+    build:
+      commands:
+        - pnpm build
+      env:
+        vars:
+          TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
+          TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
+          FRONTEND_URL: routing.client.url
+  
+  client:
+    workDir: apps/client
+    publicEnvPrefix: VITE_
+    install:
+      commands:
+        - pnpm install
+    dev:
+      command: pnpm dev
+      port: 5173
+      env:
+        vars:
+          TRPC_URL: routing.server.url
+    start:
+      command: pnpm preview --port 5173
+      port: 5173
+      env:
+        vars:
+          TRPC_URL: routing.server.url
+      
+    build:
+      commands:
+        - pnpm build
+      env:
+        vars:
+          TRPC_URL: routing.server.url
+
+taylordb:
+  version: 0.17.0
+  types:
+    - output: apps/server/taylordb/types.ts
+      format: typescript
+      onChange:
+        - pnpm lint
+
+preview:
+  service: client
+
+routing:
+  - path: /api
+    service: server
+  - path: /
+    service: client
