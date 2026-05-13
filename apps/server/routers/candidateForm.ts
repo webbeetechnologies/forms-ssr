@@ -19,6 +19,20 @@ import type { Context } from "../trpc";
  * file steps just re-validates without re-writing.
  */
 
+const MEDIA_HOST = "https://media.taylordb.ai";
+
+/**
+ * Attachment columns store relative storage paths (e.g. `files/abc.pdf`).
+ * The UI needs an absolute URL it can render in <video>/<a>; prefix the
+ * TaylorDB media host. Already-absolute URLs pass through unchanged.
+ */
+function toAbsoluteMediaUrl(url: string): string {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  const cleaned = url.startsWith("/") ? url.slice(1) : url;
+  return `${MEDIA_HOST}/${cleaned}`;
+}
+
 const sessionResolvers: SessionResolvers<Context> = {
   async createSession(ctx) {
     const inserted = await ctx.queryBuilder
@@ -54,10 +68,9 @@ const sessionResolvers: SessionResolvers<Context> = {
     // Don't allow resuming a completed submission.
     if (row.submitted === true) return null;
 
-    // Attachment columns come back as `string[]`. The query builder usually
-    // returns absolute URLs (https://media.taylordb.ai/files/…) but be
-    // defensive and prefix the media host if it's missing — the UI needs a
-    // URL it can <video src> or <a href>.
+    // Attachment columns come back as `string[]`. The query builder stores
+    // and returns relative storage paths (`files/...`); for the UI to render
+    // them in <video>/<a>, prepend the media host.
     const urlListToFileAnswers = (urls: unknown): FileAnswer[] => {
       if (!Array.isArray(urls)) return [];
       return urls

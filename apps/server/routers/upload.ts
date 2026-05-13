@@ -60,10 +60,10 @@ export const uploadRouter = router({
         .execute();
 
       // 3. Return the media metadata the form-ui expects.
-      //    `toColumnValue().url` is a relative storage path (e.g. `files/…`).
-      //    The form UI needs an absolute URL it can render in <video>/<a>, so
-      //    prepend the TaylorDB media host. The query builder uses the same
-      //    host when it expands attachment columns on read.
+      //    `cv.url` is a relative storage path (e.g. `files/abc.pdf`); the UI
+      //    needs an absolute URL it can render in <video>/<a>, so prepend the
+      //    TaylorDB media host. The same prefix is applied in
+      //    `candidateForm.loadSession` when rehydrating an existing session.
       const uploaded = attachments[0];
       const cv = uploaded.toColumnValue();
       return {
