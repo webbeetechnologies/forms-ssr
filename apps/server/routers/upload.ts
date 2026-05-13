@@ -65,12 +65,34 @@ export const uploadRouter = router({
       ]);
 
       // 2. Replace whatever is currently in the column on this row.
-      //    Passing `Attachment[]` — the query builder calls
-      //    `.toColumnValue()` for us; setting an array directly overwrites
-      //    the column.
+      //
+      //    IMPORTANT: on `AttachmentColumnType`, `.set({ col: Attachment[] })`
+      //    APPENDS to the existing attachments — it does NOT overwrite. To
+      //    truly replace (so re-uploading the same question doesn't
+      //    accumulate duplicates), we must read the current URLs and pass
+      //    them as `deletedUrls` alongside the new attachment.
+      //
+      //    See: apps/server/node_modules/@taylordb/query-builder/docs/file-upload.md
+      const existing = await ctx.queryBuilder
+        .selectFrom("candidates")
+        .select(["id", column as "resume" | "videoIntro"])
+        .where("id", "=", sessionId)
+        .executeTakeFirst();
+
+      const existingUrls = Array.isArray(existing?.[column as "resume" | "videoIntro"])
+        ? (existing![column as "resume" | "videoIntro"] as string[]).filter(
+            (u): u is string => typeof u === "string" && u.length > 0,
+          )
+        : [];
+
       await ctx.queryBuilder
         .update("candidates")
-        .set({ [column]: attachments } as Record<string, unknown>)
+        .set({
+          [column]: {
+            newAttachments: attachments,
+            deletedUrls: existingUrls,
+          },
+        } as Record<string, unknown>)
         .where("id", "=", sessionId)
         .execute();
 
