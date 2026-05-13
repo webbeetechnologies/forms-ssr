@@ -41,6 +41,12 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.16
         version: 5.90.16(react@19.2.0)
+      '@taylordb/forms-core':
+        specifier: ^0.2.0
+        version: 0.2.0
+      '@taylordb/forms-ui':
+        specifier: ^0.2.0
+        version: 0.2.0(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
       '@trpc/client':
         specifier: ^11.8.1
         version: 11.8.1(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
@@ -59,6 +65,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      libphonenumber-js:
+        specifier: ^1.13.1
+        version: 1.13.1
       lucide-react:
         specifier: ^0.561.0
         version: 0.561.0(react@19.2.0)
@@ -138,6 +147,12 @@ importers:
 
   apps/server:
     dependencies:
+      '@taylordb/forms-api':
+        specifier: ^0.2.0
+        version: 0.2.0(@taylordb/query-builder@0.17.0)
+      '@taylordb/forms-core':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@taylordb/query-builder':
         specifier: ^0.17.0
         version: 0.17.0
@@ -153,6 +168,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      libphonenumber-js:
+        specifier: ^1.13.1
+        version: 1.13.1
       multer:
         specifier: ^2.0.2
         version: 2.0.2
@@ -1282,6 +1300,20 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  '@taylordb/forms-api@0.2.0':
+    resolution: {integrity: sha512-HuKRoMiwnwJT+IaTybrcfoCQreLCKObW/PVoH37dlgmydztdsxADJf1lkRTQcz6d4NAzaNeULL/p051W5hqc2w==}
+    peerDependencies:
+      '@taylordb/query-builder': '>=0.16'
+
+  '@taylordb/forms-core@0.2.0':
+    resolution: {integrity: sha512-kFJMue5Nmo8QhLeX5ijD/xxyHD4ZRYN+qf4iWmZlBp1SpYsMPdiQBbHfszXi+99flNqc4nXyhAqQ2iWFLZbM4A==}
+
+  '@taylordb/forms-ui@0.2.0':
+    resolution: {integrity: sha512-yWldb0uLgL6MP1FMkYtX/QWkpq1YedcJYFrvYDaSZFlyVbS8yRWW2JsoS+5jpomWQmk2kBv+hr9dZGioxiysCw==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
   '@taylordb/query-builder@0.10.3':
     resolution: {integrity: sha512-GwsrSdCQelTvghPY4uzoSWHI2vsWFOFSOb4IKRS0qQT8Z6jG8VWMOSRwocvcMoQfOf2RqCDt9Wew1dK6FZNBHA==}
 
@@ -1571,6 +1603,9 @@ packages:
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
+
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
@@ -1627,6 +1662,9 @@ packages:
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
     engines: {node: '>= 0.10'}
+
+  country-flag-icons@1.6.17:
+    resolution: {integrity: sha512-Nmik0289ZVZSI3c7mJR/amg6DyY7Z59b0sTFSKayeX72mHfPzCPJygwJs2pYgQULzuAyWeCUgwAJ+Dq8OR+JFw==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -2006,6 +2044,17 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
+  input-format@0.3.14:
+    resolution: {integrity: sha512-gHMrgrbCgmT4uK5Um5eVDUohuV9lcs95ZUUN9Px2Y0VIfjTzT2wF8Q3Z4fwLFm7c5Z2OXCm53FHoovj6SlOKdg==}
+    peerDependencies:
+      react: '>=18.1.0'
+      react-dom: '>=18.1.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   internmap@2.0.3:
     resolution: {integrity: sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg==}
     engines: {node: '>=12'}
@@ -2075,6 +2124,9 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  libphonenumber-js@1.13.1:
+    resolution: {integrity: sha512-GEw0GLL7YUUA6nv21IsCvVjtI5Ejn84sjbdfQ9KxdbqEVOk1PZh7xejn01EEiniKw+dBeCfim+8MGeuvVuE2BA==}
 
   lightningcss-android-arm64@1.30.2:
     resolution: {integrity: sha512-BH9sEdOCahSgmkVhBLeU7Hc9DWeZ1Eb6wNS6Da8igvUwAe0sqROHddIlvU06q3WyXVEOYDZ6ykBZQnjTbmo4+A==}
@@ -2155,6 +2207,10 @@ packages:
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+  loose-envify@1.4.0:
+    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
+    hasBin: true
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -2308,6 +2364,9 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
+  prop-types@15.8.1:
+    resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
+
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
@@ -2336,8 +2395,17 @@ packages:
     peerDependencies:
       react: ^19.2.0
 
+  react-is@16.13.1:
+    resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+
   react-is@19.2.0:
     resolution: {integrity: sha512-x3Ax3kNSMIIkyVYhWPyO09bu0uttcAIoecO/um/rKGQ4EltYWVYtyiGkS/3xMynrbVQdS69Jhlv8FXUEZehlzA==}
+
+  react-phone-number-input@3.4.16:
+    resolution: {integrity: sha512-ix1+SIyGuLxnlAeW+XQNhwOmmDd4Zmr6Ng1eQl0E2XS8xIuue3gdZeBG4LGTMjTIFneOTO9pUPL+AEDhV6+r+A==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
 
   react-redux@9.2.0:
     resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
@@ -2780,8 +2848,29 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
   zod@4.3.5:
     resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
+
+  zustand@5.0.13:
+    resolution: {integrity: sha512-efI2tVaVQPqtOh114loML/Z80Y4NP3yc+Ff0fYiZJPauNeWZeIp/bRFD7I9bfmCOYBh/PHxlglQ9+wvlwnPikQ==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
 snapshots:
 
@@ -3670,6 +3759,29 @@ snapshots:
       '@tanstack/query-core': 5.90.16
       react: 19.2.0
 
+  '@taylordb/forms-api@0.2.0(@taylordb/query-builder@0.17.0)':
+    dependencies:
+      '@taylordb/forms-core': 0.2.0
+      '@taylordb/query-builder': 0.17.0
+
+  '@taylordb/forms-core@0.2.0':
+    dependencies:
+      zod: 3.25.76
+
+  '@taylordb/forms-ui@0.2.0(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
+    dependencies:
+      '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@taylordb/forms-core': 0.2.0
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      react-phone-number-input: 3.4.16(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      zustand: 5.0.13(@types/react@19.2.6)(immer@11.0.0)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/react-dom'
+      - immer
+      - use-sync-external-store
+
   '@taylordb/query-builder@0.10.3':
     dependencies:
       '@taylordb/shared': 0.4.4
@@ -4043,6 +4155,8 @@ snapshots:
     dependencies:
       clsx: 2.1.1
 
+  classnames@2.5.1: {}
+
   cliui@8.0.1:
     dependencies:
       string-width: 4.2.3
@@ -4096,6 +4210,8 @@ snapshots:
     dependencies:
       object-assign: 4.1.1
       vary: 1.1.2
+
+  country-flag-icons@1.6.17: {}
 
   cross-spawn@7.0.6:
     dependencies:
@@ -4541,6 +4657,13 @@ snapshots:
 
   inherits@2.0.4: {}
 
+  input-format@0.3.14(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      prop-types: 15.8.1
+    optionalDependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+
   internmap@2.0.3: {}
 
   ipaddr.js@1.9.1: {}
@@ -4587,6 +4710,8 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  libphonenumber-js@1.13.1: {}
 
   lightningcss-android-arm64@1.30.2:
     optional: true
@@ -4644,6 +4769,10 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   lodash@4.17.21: {}
+
+  loose-envify@1.4.0:
+    dependencies:
+      js-tokens: 4.0.0
 
   lru-cache@5.1.1:
     dependencies:
@@ -4773,6 +4902,12 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
+  prop-types@15.8.1:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      react-is: 16.13.1
+
   proxy-addr@2.0.7:
     dependencies:
       forwarded: 0.2.0
@@ -4800,7 +4935,19 @@ snapshots:
       react: 19.2.0
       scheduler: 0.27.0
 
+  react-is@16.13.1: {}
+
   react-is@19.2.0: {}
+
+  react-phone-number-input@3.4.16(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      classnames: 2.5.1
+      country-flag-icons: 1.6.17
+      input-format: 0.3.14(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      libphonenumber-js: 1.13.1
+      prop-types: 15.8.1
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   react-redux@9.2.0(@types/react@19.2.6)(react@19.2.0)(redux@5.0.1):
     dependencies:
@@ -5242,4 +5389,13 @@ snapshots:
     dependencies:
       zod: 4.3.5
 
+  zod@3.25.76: {}
+
   zod@4.3.5: {}
+
+  zustand@5.0.13(@types/react@19.2.6)(immer@11.0.0)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
+    optionalDependencies:
+      '@types/react': 19.2.6
+      immer: 11.0.0
+      react: 19.2.0
+      use-sync-external-store: 1.6.0(react@19.2.0)

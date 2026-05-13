@@ -1,3 +1,2 @@
-export { usersRouter } from "./users";
-export { postsRouter } from "./posts";
-export { submitUserDataRouter } from "./submitUserData";
+export { candidateFormRouter } from "./candidateForm";
+export { uploadRouter } from "./upload";

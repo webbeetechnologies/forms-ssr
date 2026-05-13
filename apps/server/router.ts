@@ -1,27 +1,9 @@
-import { z } from "zod";
-import { router, publicProcedure } from "./trpc";
-import { usersRouter, postsRouter, submitUserDataRouter } from "./routers";
+import { router } from "./trpc";
+import { candidateFormRouter, uploadRouter } from "./routers";
 
 export const appRouter = router({
-  users: usersRouter,
-  posts: postsRouter,
-  submitUserData: submitUserDataRouter,
-
-  hello: publicProcedure
-    .input(
-      z
-        .object({
-          name: z.string().optional(),
-        })
-        .optional()
-    )
-    .query(({ input }) => {
-      return {
-        message: `Hello ${input?.name ?? "World"}!`,
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-      };
-    }),
+  candidateForm: candidateFormRouter,
+  upload: uploadRouter,
 });
 
 export type AppRouter = typeof appRouter;
