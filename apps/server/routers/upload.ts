@@ -60,13 +60,27 @@ export const uploadRouter = router({
         .execute();
 
       // 3. Return the media metadata the form-ui expects.
+      //    `toColumnValue().url` is a relative storage path (e.g. `files/…`).
+      //    The form UI needs an absolute URL it can render in <video>/<a>, so
+      //    prepend the TaylorDB media host. The query builder uses the same
+      //    host when it expands attachment columns on read.
       const uploaded = attachments[0];
       const cv = uploaded.toColumnValue();
       return {
-        url: cv.url,
+        url: toAbsoluteMediaUrl(cv.url),
         name: file.name,
         type: cv.fileType,
         size: cv.size,
       };
     }),
 });
+
+const MEDIA_HOST = "https://media.taylordb.ai";
+
+/** Prefix the TaylorDB media host onto a relative storage path. */
+function toAbsoluteMediaUrl(url: string): string {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  const cleaned = url.startsWith("/") ? url.slice(1) : url;
+  return `${MEDIA_HOST}/${cleaned}`;
+}

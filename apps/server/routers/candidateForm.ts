@@ -54,12 +54,15 @@ const sessionResolvers: SessionResolvers<Context> = {
     // Don't allow resuming a completed submission.
     if (row.submitted === true) return null;
 
-    // Attachment columns come back as `string[]` of full URLs; rehydrate as
-    // FileAnswer[] so the file_upload validator + UI see the saved upload.
+    // Attachment columns come back as `string[]`. The query builder usually
+    // returns absolute URLs (https://media.taylordb.ai/files/…) but be
+    // defensive and prefix the media host if it's missing — the UI needs a
+    // URL it can <video src> or <a href>.
     const urlListToFileAnswers = (urls: unknown): FileAnswer[] => {
       if (!Array.isArray(urls)) return [];
       return urls
         .filter((u): u is string => typeof u === "string" && u.length > 0)
+        .map(toAbsoluteMediaUrl)
         .map((url) => {
           const segs = url.split("/");
           const name = decodeURIComponent(segs[segs.length - 1] ?? "upload");
