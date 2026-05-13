@@ -1,21 +1,28 @@
-import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { PassThrough } from "stream";
 import { defineConfig, type ViteDevServer } from "vite";
 
-// A simple connection manager for SSE
+// ──────────────────────────────────────────────────────────────────────────────
+// SSE log forwarder
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// TaylorDB's local dev tooling streams browser console output back to the
+// shell over `/sse-logs`. This block intercepts `console.*` calls and pipes
+// each line out as Server-Sent Events. It only runs in `vite dev`. If you
+// don't need it, you can delete this whole section without affecting the
+// form template.
+
 const clients = new Set<PassThrough>();
 
 type ConsoleLevel = "log" | "warn" | "error" | "info";
 
 function sendLog(message: { level: ConsoleLevel; message: string }) {
   clients.forEach((client) =>
-    client.write(`data: ${JSON.stringify(message)}\n\n`)
+    client.write(`data: ${JSON.stringify(message)}\n\n`),
   );
 }
 
-// Intercept console messages
 const originalConsole = {
   log: console.log,
   warn: console.warn,
@@ -32,9 +39,12 @@ Object.keys(originalConsole).forEach((level) => {
   };
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Vite config
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default defineConfig({
   plugins: [
-    tailwindcss(),
     react(),
     {
       name: "sse-plugin",

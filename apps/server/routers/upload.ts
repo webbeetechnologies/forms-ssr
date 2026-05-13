@@ -2,25 +2,40 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 
 /**
- * Upload router
+ * Upload router — file ingestion for the candidate form.
  *
- * Handles file uploads for the candidate form. Each upload is associated with
- * a candidate session id (the row id in the `candidates` table) and a target
- * column ("resume" | "videoIntro"). The endpoint:
+ * Form state on the client only carries JSON; uploading a `Blob` / `File`
+ * is a separate concern. The autosave layer's `createFileUploadMapper`
+ * calls this endpoint, swaps in the resulting URL, and only THEN sends the
+ * answer through `saveAnswer`. By the time the form-api validator runs,
+ * the file is already attached to the candidate row.
  *
- *   1. Reads the File from FormData
- *   2. Calls `qb.uploadAttachments` to push the bytes to TaylorDB media storage
- *   3. Updates the candidate row, replacing whatever was previously in the
- *      target column (so re-uploads don't accumulate dead attachments)
+ * ─── Wire format ─────────────────────────────────────────────────────────
  *
- * Returns the same `UploadedMediaFile` shape that `@taylordb/forms-ui`
- * expects from `createFileUploadMapper({ uploadFile })`:
+ *   POST /api/trpc/upload.uploadCandidateFile
+ *   Content-Type: multipart/form-data
  *
- *   { url, name, type, size }
+ *     file:       File          — the bytes
+ *     sessionId:  string        — candidate row id (autosave session id)
+ *     column:     "resume" | "videoIntro"
  *
- * The form's `saveAnswer` for the file step then just receives the resulting
- * FileAnswer[] for re-validation; no further DB write is needed because the
- * attachment is already on the row.
+ *   →  { url, name, type, size }   // shape required by `UploadedMediaFile`
+ *
+ * ─── Steps ───────────────────────────────────────────────────────────────
+ *
+ *   1. Push bytes to TaylorDB media storage via `qb.uploadAttachments`.
+ *   2. Write the resulting `Attachment` to the candidate row's column,
+ *      overwriting any previous upload (re-uploads don't accumulate).
+ *   3. Return the storage URL prefixed with the TaylorDB media host so the
+ *      UI can render it directly in <video> / <a>.
+ *
+ * ─── Adding a new file column ────────────────────────────────────────────
+ *
+ *   • Extend the `column` discriminator below.
+ *   • Make sure that column exists on the `candidates` table (schema
+ *     mutation).
+ *   • Add a matching `<FileUpload>` / `<VideoQuestion>` / `<AudioQuestion>`
+ *     to `CandidateFormPage.tsx` and a mapper in the same file.
  */
 export const uploadRouter = router({
   uploadCandidateFile: publicProcedure
@@ -44,26 +59,25 @@ export const uploadRouter = router({
         throw new Error("Invalid column");
       }
 
-      // 1. Upload bytes to TaylorDB media storage
+      // 1. Upload bytes to TaylorDB media storage.
       const attachments = await ctx.queryBuilder.uploadAttachments([
         { file, name: file.name },
       ]);
 
-      // 2. Replace whatever is currently in the column on this candidate row.
-      //    Pass `Attachment[]`; the query builder calls .toColumnValue() under
-      //    the hood. Replacing is achieved by simply setting the new value
-      //    (TaylorDB attachment column overwrites on direct array set).
+      // 2. Replace whatever is currently in the column on this row.
+      //    Passing `Attachment[]` — the query builder calls
+      //    `.toColumnValue()` for us; setting an array directly overwrites
+      //    the column.
       await ctx.queryBuilder
         .update("candidates")
         .set({ [column]: attachments } as Record<string, unknown>)
         .where("id", "=", sessionId)
         .execute();
 
-      // 3. Return the media metadata the form-ui expects.
-      //    `cv.url` is a relative storage path (e.g. `files/abc.pdf`); the UI
-      //    needs an absolute URL it can render in <video>/<a>, so prepend the
-      //    TaylorDB media host. The same prefix is applied in
-      //    `candidateForm.loadSession` when rehydrating an existing session.
+      // 3. Return media metadata for the UI. `cv.url` is a relative
+      //    storage path (e.g. `files/abc.pdf`); prepend the media host so
+      //    <video> / <a> can use it directly. `loadSession` does the same
+      //    when rehydrating a resumed session.
       const uploaded = attachments[0];
       const cv = uploaded.toColumnValue();
       return {

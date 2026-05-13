@@ -7,16 +7,38 @@ import { candidateForm } from "../forms/candidate-form-schema";
 import type { Context } from "../trpc";
 
 /**
- * Candidate form router
+ * Candidate form router — server side of the autosave contract.
  *
- * Wires `createFormsActions` from `@taylordb/forms-api` into a tRPC router
- * that the autosave-aware `<Form>` component on the client talks to.
+ * Wires `createFormsActions` from `@taylordb/forms-api` into four tRPC
+ * procedures the client's `<Form>` autosave adapter consumes:
  *
- * Sessions are persisted directly to the `candidates` table. Each row IS a
- * session: createSession inserts an empty row, saveAnswer updates one column,
- * submitForm flips `submitted = true`. File uploads land in their attachment
- * columns via the dedicated `/upload` endpoint, and saveAnswer for those
- * file steps just re-validates without re-writing.
+ *   • createSession  — insert an empty `candidates` row, return its id.
+ *   • loadSession    — read the row, hand back answers keyed by step id.
+ *   • saveAnswer     — re-validate the value, then update one column.
+ *   • submitForm     — final validation pass + flip `submitted = true`.
+ *
+ * Sessions ARE the candidate row. There is no separate "form session"
+ * table: one candidate = one in-flight or completed application.
+ *
+ * ─── Adding a new question ───────────────────────────────────────────────
+ *
+ *   1. Add the step to `candidate-form-schema.ts`.
+ *   2. If you need a new column, run a schema mutation to add it to the
+ *      `candidates` table.
+ *   3. Add a `save: async (ctx, sessionId, value) => { … }` entry below in
+ *      `candidateForm.resolvers({ … })`.
+ *   4. Add the matching `<Question id="…">` in `CandidateFormPage.tsx`.
+ *
+ * ─── Adding a file question ──────────────────────────────────────────────
+ *
+ *   File bytes don't flow through `saveAnswer` — they go through the
+ *   dedicated `upload.uploadCandidateFile` mutation, which writes them
+ *   directly to the candidate row's attachment column. The `save` resolver
+ *   here is a no-op for file steps (validation only). See `upload.ts`.
+ *
+ * ─── Where to look for forms-api docs ────────────────────────────────────
+ * apps/server/node_modules/@taylordb/forms-api/llm.txt
+ * apps/server/node_modules/@taylordb/forms-api/docs/api.md
  */
 
 const MEDIA_HOST = "https://media.taylordb.ai";
@@ -148,9 +170,10 @@ const actions = createFormsActions({
   resolvers,
   session: sessionResolvers,
   emailConfig: {
+    // forms-api compiles a self-contained HTML email summary on submit and
+    // hands it to `send`. This template just logs it; wire up your real
+    // mailer (Resend, SendGrid, SES, …) here.
     send: async ({ html }) => {
-      // No email transport wired up in this template — log the rendered HTML
-      // for visibility during development.
       console.log("\n[candidate form submission]\n", html, "\n");
     },
   },

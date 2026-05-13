@@ -1,282 +1,222 @@
-# AI Agent Instructions — TaylorDB Full-Stack Template
+# AI Agent Instructions — TaylorDB Forms Template
 
-## Architecture Overview
+This is a **forms-only** template. Every change you make is in service of
+building or modifying a Typeform-style conversational form backed by
+TaylorDB. Do not introduce dashboards, generic CRUD, or unrelated UI.
 
-```
-HTTP Request (with app_access_token cookie)
-  ↓
-Express + tRPC (apps/server/index.ts, apps/server/trpc.ts)
-  ↓
-Routers (apps/server/routers/) — tRPC procedures using ctx.queryBuilder directly
-  ↓
-tRPC Client (apps/client/src/lib/trpc.ts)
-  ↓
-React Pages (apps/client/src/pages/) — consume via tRPC React Query hooks
-```
+If you need a quick orientation, read [`README.md`](./README.md) first.
 
 ---
 
-## Critical Files — Read in This Order
+## Mental model
 
-1. **[apps/server/taylordb/types.ts](apps/server/taylordb/types.ts)** — Database schema (tables, columns, types). Generated, never edit.
-2. **[apps/server/routers/](apps/server/routers/)** — tRPC procedures. Call `ctx.queryBuilder` here.
-3. **[apps/client/src/lib/trpc.ts](apps/client/src/lib/trpc.ts)** — tRPC client setup. Sends cookies with `credentials: "include"`.
+```
+                          shared schema
+   ┌───────────────────────────────────────────────────────────┐
+   │ apps/server/forms/candidate-form-schema.ts                │
+   │   defineForm({ sharedSteps: [{id, type, validate?}, …] }) │
+   └─────────────┬───────────────────────────────┬─────────────┘
+                 │                               │
+                 ▼                               ▼
+   ┌────────────────────────┐       ┌──────────────────────────┐
+   │ apps/client/src/pages/ │ tRPC  │ apps/server/routers/     │
+   │ CandidateFormPage.tsx  │ ────► │ candidateForm.ts         │
+   │   <Form>               │       │   createSession          │
+   │   <Question id="…">    │       │   loadSession            │
+   │   …                    │       │   saveAnswer (per step)  │
+   │                        │       │   submitForm             │
+   └────────────────────────┘       └──────────────────────────┘
+                                                ▲
+                                                │
+                                    apps/server/routers/upload.ts
+                                    (file bytes → attachment column)
+```
 
-Do NOT read `apps/server/taylordb/query-builder.ts` — it does not exist as a source file. The query builder is an npm package (`@taylordb/query-builder`).
+* **Schema is the single source of truth.** Any change to questions
+  starts in `candidate-form-schema.ts`.
+* **One row per session.** A row in the `candidates` table represents
+  one in-flight or completed application.
+* **Files bypass `saveAnswer`.** They go through the upload endpoint and
+  land in attachment columns directly. The `save` resolver for a
+  `file_upload` step is a no-op.
 
 ---
 
-## Authentication & Cookies
+## Critical files (read in this order)
 
-**TaylorDB login flow sets an `app_access_token` cookie.** This cookie is:
-- An `HttpOnly` cookie (safe from XSS)
-- Automatically sent on every request because:
-  - Server has `credentials: true` in CORS
-  - tRPC client has `credentials: "include"` on both links
-  - Browser sends cookies on same-site and cross-origin requests
-
-**In `apps/server/trpc.ts`:**
-```typescript
-const appAccessToken = req.cookies?.app_access_token;
-if (!appAccessToken) throw new Error("Unauthorized");
-// Use token to create per-request queryBuilder
-```
-
-**You do not add auth guards to individual procedures.** The context factory throws before any procedure runs, so all procedures are automatically protected.
+| Order | File | Why |
+| --- | --- | --- |
+| 1 | `apps/server/taylordb/types.ts` | Auto-generated DB schema. NEVER edit. |
+| 2 | `apps/server/forms/candidate-form-schema.ts` | Shared steps + validation. |
+| 3 | `apps/server/routers/candidateForm.ts` | Server-side autosave actions + resolvers. |
+| 4 | `apps/server/routers/upload.ts` | File upload mutation. |
+| 5 | `apps/client/src/pages/CandidateFormPage.tsx` | The form itself. |
 
 ---
 
-## Context (ctx)
+## Always-on rules
 
-Every tRPC request gets a fresh context containing `ctx.queryBuilder`. Use `ctx.queryBuilder` directly within your router procedures for all database reads, writes, and uploads.
+1. **Never start, stop, or restart processes manually.** The dev server
+   is supervised by `pm2`. To restart, use the `dev-server-restart`
+   tool — never `pnpm dev`, `pm2`, `node`, etc.
+2. **Never edit `apps/server/taylordb/types.ts`.** It is regenerated
+   from TaylorDB's schema. To change the schema, use the
+   `schema-mutation` tool.
+3. **Never add a per-procedure auth guard.** `createContext` in
+   `apps/server/trpc.ts` already throws if the
+   `app_access_token` cookie is missing. Every tRPC procedure is
+   protected by default.
+4. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
+   no globals, no other clients.
+5. **Always run `pnpm build`** to verify TypeScript before declaring
+   work done. `pnpm lint` is currently broken at the repo root for
+   unrelated reasons; rely on `pnpm build`.
+6. **Never invent forms-ui APIs.** When in doubt, read the package's
+   own `llm.txt` and `docs/` (paths below). The packages are the
+   authoritative source; the README in this repo is just a pointer.
 
----
+### Authoritative library docs (already in node_modules)
 
-## File Organization — Where to Put What
+| Topic | Path |
+| --- | --- |
+| forms-ui overview | `apps/client/node_modules/@taylordb/forms-ui/llm.txt` |
+| forms-ui inputs | `apps/client/node_modules/@taylordb/forms-ui/docs/inputs.md` |
+| Autosave (fetch + tRPC) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
+| Theming, hooks, exports | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
+| Recipes & pitfalls | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
+| Bigger example | `apps/client/node_modules/@taylordb/forms-ui/example.md` |
+| forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
+| forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |
+| Query builder | `apps/server/node_modules/@taylordb/query-builder/llm.txt` |
 
-| What | Where |
-|---|---|
-| Database read/write methods for one table | `apps/server/repositories/index.ts` — add function `createXRepository(qb)` |
-| Business logic, computed fields, cross-repo logic | `apps/server/services/index.ts` — add function `createXService(repos)` |
-| tRPC query/mutation endpoint | `apps/server/routers/[domain].ts` — import and use `ctx.repositories` or `ctx.services` |
-| Wire new router to app | `apps/server/router.ts` + `apps/server/routers/index.ts` |
-| React page (dashboard, form, etc.) | `apps/client/src/pages/[Name]Page.tsx` |
-| Reusable UI component | `apps/client/src/components/[name].tsx` |
-| shadcn/ui component | Install with `pnpm dlx shadcn@latest add [component]`, auto-placed in `apps/client/src/components/ui/` |
-| Design tokens (colors, spacing, etc.) | `apps/client/src/index.css` |
-| Database schema (generated) | `apps/server/taylordb/types.ts` — DO NOT EDIT |
-
----
-
-## Adding a New Domain (Step-by-Step)
-
-### 1. Add Repository Function
-
-**File:** `apps/server/repositories/index.ts`
-
-```typescript
-export function createProjectsRepository(qb: QB) {
-  return {
-    getAll: () =>
-      qb.selectFrom("projects").select(["id", "name", "status"]).execute(),
-    getById: (id: number) =>
-      qb.selectFrom("projects").where("id", "=", id).executeTakeFirst(),
-    create: (data: Partial<TableInserts<"projects">>) =>
-      qb.insertInto("projects").values(data).executeTakeFirst(),
-    update: (id: number, data: Partial<TableUpdates<"projects">>) =>
-      qb.update("projects").set(data).where("id", "=", id).execute(),
-    delete: (id: number) =>
-      qb.deleteFrom("projects").where("id", "=", id).execute(),
-  };
-}
-```
-
-Then add to `createRepositories`:
-```typescript
-export function createRepositories(qb: QB) {
-  return {
-    // ... existing
-    projects: createProjectsRepository(qb),
-  };
-}
-```
-
-### 2. (Optional) Add Service
-
-**File:** `apps/server/services/index.ts`
-
-If the domain needs computed logic or spans multiple tables:
-
-```typescript
-export function createProjectsService(repos: Repositories) {
-  return {
-    getAll: () => repos.projects.getAll(),
-    // Add computed operations here
-  };
-}
-```
-
-Then add to `createServices`:
-```typescript
-export function createServices(repos: Repositories) {
-  return {
-    // ... existing
-    projects: createProjectsService(repos),
-  };
-}
-```
-
-### 3. Create Router File
-
-**File:** `apps/server/routers/projects.ts`
-
-```typescript
-import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
-
-export const projectsRouter = router({
-  getAll: publicProcedure.query(({ ctx }) =>
-    ctx.repositories.projects.getAll()
-  ),
-
-  getById: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .query(({ input, ctx }) =>
-      ctx.repositories.projects.getById(input.id)
-    ),
-
-  create: publicProcedure
-    .input(z.object({ name: z.string().min(1), status: z.string() }))
-    .mutation(({ input, ctx }) =>
-      ctx.repositories.projects.create(input)
-    ),
-
-  delete: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(({ input, ctx }) =>
-      ctx.repositories.projects.delete(input.id)
-    ),
-});
-```
-
-### 4. Export from Router Index
-
-**File:** `apps/server/routers/index.ts`
-
-```typescript
-export { projectsRouter } from "./projects";
-```
-
-### 5. Wire to App Router
-
-**File:** `apps/server/router.ts`
-
-```typescript
-import { projectsRouter } from "./routers";
-
-export const appRouter = router({
-  // ... existing
-  projects: projectsRouter,
-});
-```
+When you touch ANY `@taylordb/*` package and aren't sure of an API,
+**read its `llm.txt` first**.
 
 ---
 
-## File Uploads (FormData + Multipart)
+## Common tasks
 
-File uploads are the **one exception** where `ctx.queryBuilder` is used directly:
+### Add a question
 
-```typescript
-upload: publicProcedure
-  .input(z.instanceof(FormData))
-  .mutation(async ({ input, ctx }) => {
-    const file = input.get("avatar") as File | null;
-    const name = input.get("name") as string;
+1. Add a step to `sharedSteps` in
+   `apps/server/forms/candidate-form-schema.ts`:
 
-    const attachments = file
-      ? await ctx.queryBuilder.uploadAttachments([
-          { file, name: file.name }
-        ])
-      : [];
+   ```ts
+   {
+     id: "linkedin",            // stable; used as wire key + Question id
+     type: "url",               // handler type from forms-core
+     validate(value) {
+       return value.includes("linkedin.com")
+         ? null
+         : "Must be a LinkedIn URL.";
+     },
+   },
+   ```
 
-    // After uploading, use repository for the insert
-    return ctx.repositories.users.create({ name, avatar: attachments });
-  }),
-```
+2. If the value needs to live in a new column, use the
+   `schema-mutation` tool to add it to the `candidates` table.
 
-Client-side: use `FormData` + the splitLink in `trpc.ts` routes FormData through `httpLink` (no batching).
+3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`:
 
----
+   ```ts
+   linkedin: {
+     save: async (ctx, sessionId, value) => {
+       await ctx.queryBuilder
+         .update("candidates")
+         .set({ linkedin: value })
+         .where("id", "=", sessionId)
+         .execute();
+     },
+   },
+   ```
 
-## Client-Side Data Fetching
+4. Render the question in `CandidateFormPage.tsx`:
 
-### Queries (Reads)
+   ```tsx
+   <Question id="linkedin" required>
+     <Title>What's your LinkedIn?</Title>
+     <UrlInput placeholder="https://linkedin.com/in/…" />
+   </Question>
+   ```
 
-```typescript
-const { data, isLoading, error } = trpc.projects.getAll.useQuery();
+5. Update `loadSession` in `candidateForm.ts` to return the new field
+   so it rehydrates on refresh.
 
-// With input
-const { data } = trpc.projects.getById.useQuery({ id: 42 });
-```
+### Add a file question
 
-### Mutations (Writes)
+Same as above, plus:
 
-```typescript
-const createMutation = trpc.projects.create.useMutation({
-  onSuccess: () => {
-    // Re-fetch list after create
-    utils.projects.getAll.invalidate();
+* Use `type: "file_upload"` in the schema.
+* Make the new column an `attachment` type via `schema-mutation`.
+* Extend the `column` discriminator in
+  `apps/server/routers/upload.ts`.
+* Add a mapper entry in `CandidateFormPage.tsx`:
+
+  ```ts
+  newDoc: {
+    toApiValue: createFileUploadMapper({
+      uploadFile: (input) => uploadCandidateFile("newDoc", input),
+    }),
   },
-});
+  ```
 
-createMutation.mutate({ name: "New Project", status: "active" });
+* The `save` resolver for the file step stays a no-op — the upload
+  endpoint already wrote the bytes to the row.
+
+### Conditional question
+
+Use `showWhen` on BOTH the shared step and the `<Question>`. Without it
+on the shared step, the server will refuse to save answers for a step it
+considers hidden.
+
+```ts
+// schema
+{ id: "company", type: "text",
+  showWhen: ({ answers }) => answers.role === "founder" }
 ```
 
----
+```tsx
+// page
+<Question id="company" showWhen={({ answers }) => answers.role === "founder"}>
+  <Title>What are you building?</Title>
+  <TextArea />
+</Question>
+```
 
-## UI Components
+### Change the brand colour
 
-- Use **shadcn/ui only**. No hand-rolled primitives.
-- Install: `pnpm dlx shadcn@latest add [component-name]`
-- Design tokens in `apps/client/src/index.css` (HSL colors, spacing, typography)
+Edit `purpleTheme` in `CandidateFormPage.tsx`. Available tokens are in
+the theming doc linked above. The page background gradient lives in
+`apps/client/src/index.css`.
 
-See:
-- `docs/SHADCN_COMPONENTS_GUIDE.md` — index of all components
-- `docs/SHADCN_INSTALLATION.md` — install commands by category
-- `docs/SHADCN_DASHBOARD_PATTERNS.md` — 10 copy-paste patterns (tables, dialogs, forms, etc.)
+### Wire up email-on-submit
 
----
-
-## Database Query Patterns
-
-For detailed query builder reference, you MUST read the documentation provided inside the package:
-`apps/server/node_modules/@taylordb/query-builder/llm.txt`
-
-This file is the entrypoint to understanding the query builder. Always consult `apps/server/node_modules/@taylordb/query-builder/llm.txt` and the `docs/` folder next to it when you need to understand how to interact with the database.
-
-**IMPORTANT:** Always check for an `llm.txt` file when interacting with ANY package starting with `@taylordb/`. All `@taylordb/` packages expose an `llm.txt` in their root which acts as the official documentation. You MUST read it before using the package.
+Replace the `console.log` body of `emailConfig.send` in
+`apps/server/routers/candidateForm.ts` with a call to your mailer. The
+HTML argument is a complete, self-contained submission summary.
 
 ---
 
-## Critical Rules
+## Things that will trip you up
 
-1. **NEVER use in-memory data.** Always connect via `ctx.queryBuilder`.
-2. **NEVER edit `apps/server/taylordb/types.ts`.** It is auto-generated.
-3. **NEVER add per-procedure auth.** Auth is centralized in `createContext`.
-4. **NEVER start, stop, or manage the server process manually.** The application is strictly managed by a root `pm2` process. You are operating as an unprivileged `taylordb` user. If you need to restart the server, you MUST use the `dev-server-restart` tool. Do not run `npm start`, `pm2 restart`, `node index.js`, or similar commands.
-5. **ALWAYS run `pnpm build`** to verify TypeScript before declaring work done.
-6. **ALWAYS use `executeTakeFirst()`** for single-record queries, `execute()` for lists.
-7. **ALWAYS use `["exactDay", "YYYY-MM-DD"]`** format for date equality filters.
-8. **ALWAYS handle `undefined`** from `executeTakeFirst()` — it can return undefined.
-9. **ALWAYS use shadcn/ui** for UI components, not hand-rolled HTML.
-10. **ALWAYS use `Partial<TableInserts<"table">>`** for type-safe insert/update parameters.
+* `WelcomeScreen` / `Statement` / `EndScreen` collect no answer. **Do
+  not** add them to `sharedSteps`. They live only inside `<Form>` in the
+  page.
+* `<Question id="...">` `id` MUST exactly match the shared step `id`.
+* Inputs inside a `<Question>` should NOT pass an `id` prop — they bind
+  to the surrounding question via context.
+* Composite inputs (like `AddressInput` parts) use `name`, not `id`.
+* `YesNo` stores the strings `"yes"` / `"no"`. If your handler is
+  `yes_no` (boolean), add a `toApiValue: (v) => v === "yes"` mapper.
+* The autosave session id is read from a cookie called
+  `taylordb_forms_session_candidate`. Clearing it forces a new session.
+* `pnpm lint` at the repo root currently fails due to an unrelated
+  ESLint config issue. Use `pnpm build` for verification.
 
 ---
 
-## Success Criteria
+## When in doubt
 
-- `pnpm build` passes with zero TypeScript errors
-- `pnpm lint` passes with zero errors
-- All tRPC procedures use `ctx.queryBuilder`
-- No in-memory data stores in routers
-- UI uses shadcn/ui components with proper loading/error states
+1. Read the relevant `llm.txt` in the `@taylordb/*` package.
+2. Look at how the existing candidate form does the same thing.
+3. Match the existing pattern — don't invent a new one.

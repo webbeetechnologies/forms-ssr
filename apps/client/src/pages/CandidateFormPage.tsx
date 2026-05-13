@@ -23,36 +23,73 @@ import { candidateForm } from "@repo/server/forms/candidate-form-schema";
 import { trpcVanilla } from "../lib/trpc-vanilla";
 
 /**
- * Purple-themed Typeform-like candidate form.
+ * Candidate form — Typeform-style flow with autosave.
  *
- * The schema (`candidateForm`) lives in the server package and is imported by
- * both sides so client and server validators stay in lockstep.
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │ How this page is structured                                             │
+ * ├─────────────────────────────────────────────────────────────────────────┤
+ * │ 1. Theme            — purple accent over `lightTheme`                   │
+ * │ 2. Autosave client  — tRPC-backed, created at module scope (Promise)    │
+ * │ 3. File mappers     — upload bytes through `upload.uploadCandidateFile` │
+ * │ 4. Provider         — bootstraps the session before rendering <Form>    │
+ * │ 5. Status banner    — fixed pill showing Saving / Saved / Error         │
+ * │ 6. <Form>           — declarative steps. `id` MUST match shared schema. │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * The schema (`candidateForm`) lives in the server package and is imported
+ * by both sides so client and server validators stay in lockstep.
  *
  * Files (resume + 2-min video intro) are uploaded through a dedicated tRPC
  * mutation (`upload.uploadCandidateFile`) which writes the bytes to the
  * candidate row's attachment column. The form itself only stores
- * `FileAnswer[]` metadata, so on autosave the resume/videoIntro saveAnswer
- * resolvers are no-ops — the attachment is already on the row.
+ * `FileAnswer[]` metadata, so on autosave the resume / videoIntro
+ * `saveAnswer` resolvers are no-ops — the attachment is already on the row.
+ *
+ * ─── Where to look for forms-ui docs ──────────────────────────────────────
+ * apps/client/node_modules/@taylordb/forms-ui/llm.txt
+ * apps/client/node_modules/@taylordb/forms-ui/docs/{form-api,inputs,autosave,recipes-agents}.md
+ * apps/client/node_modules/@taylordb/forms-ui/example.md
  */
 
-// ----- Brand theme -------------------------------------------------------
+// ─── 1. Theme ────────────────────────────────────────────────────────────
+//
+// Override individual tokens on top of `lightTheme` (or `darkTheme`). The
+// full token list lives in `@taylordb/forms-ui/docs/hooks-theming-exports.md`.
+// Common ones: accent, surface, text, error, fontFamily.
 const purpleTheme: FormTheme = {
   ...lightTheme,
   accent: "#8b5cf6",
   surface: "rgba(139, 92, 246, 0.08)",
 };
 
-// ----- File upload bridge ------------------------------------------------
+// ─── 2. Autosave client ──────────────────────────────────────────────────
 //
-// The `createTrpcAutosaveClient` is created once at module scope (Promise);
-// we await it inside the bootstrap below. To upload files we need the
-// resolved sessionId, so we expose a getter that reads it after bootstrap.
-
+// `createTrpcAutosaveClient` wires `<Form>` autosave to the four tRPC
+// procedures defined on the server's `candidateForm` router:
+//   createSession / loadSession / saveAnswer / submitForm
+//
+// It returns a Promise (because it boots / probes the session id from a
+// cookie before resolving). We hold the promise at module scope so the
+// upload mappers below can `await` it to read the resolved `sessionId`.
 const autosaveClientPromise = createTrpcAutosaveClient(
   trpcVanilla.candidateForm,
   { formId: "candidate" },
 );
 
+// ─── 3. File upload mappers ──────────────────────────────────────────────
+//
+// `<FileUpload>` and `<VideoQuestion>` store `MediaAnswer` objects in the
+// form state — they hold a `Blob` / `File` plus metadata. Before the
+// autosave layer sends the answer to the server it runs the mapper, which
+// uploads the bytes and returns a `FileAnswer[]` with the resulting URL.
+//
+// We post the file via the dedicated `upload.uploadCandidateFile`
+// mutation, which:
+//   • runs `qb.uploadAttachments` to push bytes to TaylorDB media storage,
+//   • writes the resulting Attachment to the candidate row's column,
+//   • returns `{ url, name, type, size }` (URL prefixed with the media host).
+//
+// The `sessionId` is read from the resolved autosave client.
 async function uploadCandidateFile(
   column: "resume" | "videoIntro",
   input: UploadMediaFileInput,
@@ -78,13 +115,23 @@ const mappers = candidateForm.mappers({
   },
 });
 
+// ─── 4. Bootstrap provider ───────────────────────────────────────────────
+//
+// `createAutosaveBootstrap` produces a Provider that:
+//   • awaits the autosave client,
+//   • calls `loadSession` once to seed `defaultValues`,
+//   • mounts <Form> only after defaults are ready (avoids a step flash),
+//   • feeds `sharedSteps` so client validation matches the server.
 const CandidateAutosaveProvider = createAutosaveBootstrap({
   client: autosaveClientPromise,
   mappers,
   sharedSteps: candidateForm.sharedSteps,
 });
 
-// ----- Status badge -------------------------------------------------------
+// ─── 5. Save status banner ───────────────────────────────────────────────
+//
+// Optional UX. Reads autosave state from the form store via
+// `useAutosaveStatus()`. Safe to delete entirely if you don't want the pill.
 function SessionBanner() {
   const { saveStatus, saveError, isHydrating } = useAutosaveStatus();
 
@@ -122,6 +169,17 @@ function SessionBanner() {
   );
 }
 
+// ─── 6. The form itself ──────────────────────────────────────────────────
+//
+// Each step is one JSX element. Question `id` must match the shared schema
+// step `id`. Welcome / Statement / EndScreen don't appear in `sharedSteps`
+// (they don't collect answers).
+//
+// To add a new question:
+//   1. Add the step to `sharedSteps` in `candidate-form-schema.ts`.
+//   2. Add a matching `<Question id="...">` here.
+//   3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`.
+//   4. Add the column to the `candidates` table via schema mutation.
 export default function CandidateFormPage() {
   return (
     <CandidateAutosaveProvider
@@ -143,8 +201,8 @@ export default function CandidateFormPage() {
         <WelcomeScreen id="welcome" buttonText="Start application">
           <Title>Apply to join the team.</Title>
           <Description>
-            Takes about two minutes. Your answers save as you go — refresh any
-            time to pick up where you left off.
+            Takes about two minutes. Your answers save as you go — refresh
+            any time to pick up where you left off.
           </Description>
         </WelcomeScreen>
 
@@ -155,7 +213,9 @@ export default function CandidateFormPage() {
 
         <Question id="email" required>
           <Title>Where can we email you?</Title>
-          <Description>We'll only use this to follow up on your application.</Description>
+          <Description>
+            We'll only use this to follow up on your application.
+          </Description>
           <TextInput placeholder="jane@example.com" />
         </Question>
 
@@ -176,8 +236,8 @@ export default function CandidateFormPage() {
         <Question id="videoIntro" required>
           <Title>Record a short video introduction.</Title>
           <Description>
-            Up to two minutes. Tell us a little about yourself and why you're
-            applying.
+            Up to two minutes. Tell us a little about yourself and why
+            you're applying.
           </Description>
           <VideoQuestion maxDurationSeconds={120} />
         </Question>
@@ -185,8 +245,8 @@ export default function CandidateFormPage() {
         <EndScreen id="done" buttonText="Submit application">
           <Title>Ready to send it in?</Title>
           <Description>
-            Thanks for taking the time. Once you submit, our team will review
-            your application and get back to you.
+            Thanks for taking the time. Once you submit, our team will
+            review your application and get back to you.
           </Description>
         </EndScreen>
       </Form>

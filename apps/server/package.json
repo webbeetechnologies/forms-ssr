@@ -23,16 +23,13 @@
     "cors": "^2.8.5",
     "express": "^5.2.1",
     "libphonenumber-js": "^1.13.1",
-    "multer": "^2.0.2",
     "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
-    "concurrently": "^9.2.1",
     "esbuild": "^0.27.2",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3"
