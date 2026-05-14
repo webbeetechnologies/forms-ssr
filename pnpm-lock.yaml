@@ -27,8 +27,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       '@taylordb/forms-ui':
-        specifier: ^0.2.4
-        version: 0.2.4(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+        specifier: ^0.2.5
+        version: 0.2.5(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
       '@trpc/client':
         specifier: ^11.8.1
         version: 11.8.1(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
@@ -1018,8 +1018,8 @@ packages:
   '@taylordb/forms-core@0.2.1':
     resolution: {integrity: sha512-iBEf3haS41+F7N+3/4fbyWBEr5jnsD9wkeIUxR3ppDiG9NG5CHPthEQMh1/VGAf4hLyR8RPMoz5otzD+MpEZbw==}
 
-  '@taylordb/forms-ui@0.2.4':
-    resolution: {integrity: sha512-JA/rCuD0UshK7LxSxjifdEJgW7Df7QuMchGkvZ7MxGsbnlEkZ+eC51uiUH0Sn2BMDEhpWJP6lYENk71vsNmWhA==}
+  '@taylordb/forms-ui@0.2.5':
+    resolution: {integrity: sha512-5l29TKQ1ZJq+RGc0VwGafuc4D7Xy7Do048IbFZaZArfA2wyAVk8WjjVITUKng+O2UIFHEQ0R0qkGQT6ztIOCIg==}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
@@ -3006,7 +3006,7 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@taylordb/forms-ui@0.2.4(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
+  '@taylordb/forms-ui@0.2.5(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
     dependencies:
       '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@taylordb/forms-core': 0.2.1

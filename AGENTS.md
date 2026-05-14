@@ -236,6 +236,9 @@ HTML argument is a complete, self-contained submission summary.
   `yes_no` (boolean), add a `toApiValue: (v) => v === "yes"` mapper.
 * The autosave session id is read from a cookie called
   `taylordb_forms_session_candidate`. Clearing it forces a new session.
+* `@taylordb/forms-ui` v0.2.5+ validates `<Question>` order against
+  `sharedSteps` order at runtime — a mismatch throws an error. It also
+  throws on duplicate step ids. Keep JSX order in sync with `defineForm`.
 * `pnpm lint` at the repo root currently fails due to an unrelated
   ESLint config issue. Use `pnpm build` for verification.
 
