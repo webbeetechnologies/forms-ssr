@@ -24,11 +24,11 @@ importers:
         specifier: ^5.90.16
         version: 5.90.16(react@19.2.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.2.1
+        version: 0.2.1
       '@taylordb/forms-ui':
-        specifier: ^0.2.3
-        version: 0.2.3(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+        specifier: ^0.2.4
+        version: 0.2.4(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
       '@trpc/client':
         specifier: ^11.8.1
         version: 11.8.1(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
@@ -91,11 +91,11 @@ importers:
   apps/server:
     dependencies:
       '@taylordb/forms-api':
-        specifier: ^0.2.0
-        version: 0.2.0(@taylordb/query-builder@0.17.0)
+        specifier: ^0.2.2
+        version: 0.2.2(@taylordb/query-builder@0.17.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.2.1
+        version: 0.2.1
       '@taylordb/query-builder':
         specifier: ^0.17.0
         version: 0.17.0
@@ -1010,16 +1010,16 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@taylordb/forms-api@0.2.0':
-    resolution: {integrity: sha512-HuKRoMiwnwJT+IaTybrcfoCQreLCKObW/PVoH37dlgmydztdsxADJf1lkRTQcz6d4NAzaNeULL/p051W5hqc2w==}
+  '@taylordb/forms-api@0.2.2':
+    resolution: {integrity: sha512-FFDkJC/hnkAAVCckqPQKmROeV5KKgj6F1//mnStBYMfH0xFwNtm+w425Dh3h6teYEVEoDrn1dfiKApSPVILyng==}
     peerDependencies:
       '@taylordb/query-builder': '>=0.16'
 
-  '@taylordb/forms-core@0.2.0':
-    resolution: {integrity: sha512-kFJMue5Nmo8QhLeX5ijD/xxyHD4ZRYN+qf4iWmZlBp1SpYsMPdiQBbHfszXi+99flNqc4nXyhAqQ2iWFLZbM4A==}
+  '@taylordb/forms-core@0.2.1':
+    resolution: {integrity: sha512-iBEf3haS41+F7N+3/4fbyWBEr5jnsD9wkeIUxR3ppDiG9NG5CHPthEQMh1/VGAf4hLyR8RPMoz5otzD+MpEZbw==}
 
-  '@taylordb/forms-ui@0.2.3':
-    resolution: {integrity: sha512-RosqftySle7dVQ8n94jNxPvUT/CvOa0AaJGt7rXP45bEDwHgnDFpW3niPIbzNfyxvOudEl82xOC/6BxcjGliMg==}
+  '@taylordb/forms-ui@0.2.4':
+    resolution: {integrity: sha512-JA/rCuD0UshK7LxSxjifdEJgW7Df7QuMchGkvZ7MxGsbnlEkZ+eC51uiUH0Sn2BMDEhpWJP6lYENk71vsNmWhA==}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
@@ -2997,19 +2997,19 @@ snapshots:
       '@tanstack/query-core': 5.90.16
       react: 19.2.0
 
-  '@taylordb/forms-api@0.2.0(@taylordb/query-builder@0.17.0)':
+  '@taylordb/forms-api@0.2.2(@taylordb/query-builder@0.17.0)':
     dependencies:
-      '@taylordb/forms-core': 0.2.0
+      '@taylordb/forms-core': 0.2.1
       '@taylordb/query-builder': 0.17.0
 
-  '@taylordb/forms-core@0.2.0':
+  '@taylordb/forms-core@0.2.1':
     dependencies:
       zod: 3.25.76
 
-  '@taylordb/forms-ui@0.2.3(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
+  '@taylordb/forms-ui@0.2.4(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))':
     dependencies:
       '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@taylordb/forms-core': 0.2.0
+      '@taylordb/forms-core': 0.2.1
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
       react-phone-number-input: 3.4.16(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
