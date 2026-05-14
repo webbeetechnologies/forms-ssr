@@ -198,6 +198,16 @@ export default function CandidateFormPage() {
       <Form keyboard theme={purpleTheme}>
         <SessionBanner />
 
+        {/* Logo and footer */}
+        <div style={{ position: "fixed", bottom: 24, left: 24, zIndex: 100 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src="/logo.svg" alt="Logo" style={{ width: 24, height: 24 }} />
+            <span style={{ fontSize: 12, color: "#666" }}>
+              Powered by TaylorDB Forms
+            </span>
+          </div>
+        </div>
+
         <WelcomeScreen id="welcome" buttonText="Start application">
           <Title>Apply to join the team.</Title>
           <Description>
