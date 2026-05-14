@@ -62,16 +62,35 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 2. **Never edit `apps/server/taylordb/types.ts`.** It is regenerated
    from TaylorDB's schema. To change the schema, use the
    `schema-mutation` tool.
-3. **Never add a per-procedure auth guard.** `createContext` in
+3. **Always create a TaylorDB column for new questions.** If a question requires
+   persistent data, use `schema-mutation` to update the `candidates` table.
+   *   **Ask for user consent** before deleting any column as this will result in permanent data loss.
+4. **Use correct column types** for question types:
+   *   `TextInput` -> `singlelineText`
+   *   `TextArea` -> `longText`
+   *   `NumberInput` -> `number`
+   *   `DateInput` -> `date`
+   *   `PhoneInput` -> `phoneNumber`
+   *   `UrlInput` -> `url`
+   *   `Dropdown` -> `select`
+   *   `MultipleChoice` -> `select` (with `isSingle = false`)
+   *   `YesNo` -> `checkbox`
+   *   `Rating` / `Scale` -> `rating`
+   *   `Legal` -> `checkbox`
+   *   `FileUpload` / `VideoQuestion` / `AudioQuestion` -> `attachment`
+   *   `AddressInput` -> Create a separate foreign table linked to `candidates` (includes address, address line 2, city, state, zip code, country).
+   *   `ContactInfoInput` -> Create a separate foreign table linked to `candidates` (includes first name, last name, company, email, phone number).
+   *   *Note: Ranking is not supported.*
+5. **Never add a per-procedure auth guard.** `createContext` in
    `apps/server/trpc.ts` already throws if the
    `app_access_token` cookie is missing. Every tRPC procedure is
    protected by default.
-4. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
+6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
-5. **Always run `pnpm build`** to verify TypeScript before declaring
+7. **Always run `pnpm build`** to verify TypeScript before declaring
    work done. `pnpm lint` is currently broken at the repo root for
    unrelated reasons; rely on `pnpm build`.
-6. **Never invent forms-ui APIs.** When in doubt, read the package's
+8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
 
@@ -100,48 +119,11 @@ When you touch ANY `@taylordb/*` package and aren't sure of an API,
 ### Add a question
 
 1. Add a step to `sharedSteps` in
-   `apps/server/forms/candidate-form-schema.ts`:
-
-   ```ts
-   {
-     id: "linkedin",            // stable; used as wire key + Question id
-     type: "url",               // handler type from forms-core
-     validate(value) {
-       return value.includes("linkedin.com")
-         ? null
-         : "Must be a LinkedIn URL.";
-     },
-   },
-   ```
-
-2. If the value needs to live in a new column, use the
-   `schema-mutation` tool to add it to the `candidates` table.
-
-3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`:
-
-   ```ts
-   linkedin: {
-     save: async (ctx, sessionId, value) => {
-       await ctx.queryBuilder
-         .update("candidates")
-         .set({ linkedin: value })
-         .where("id", "=", sessionId)
-         .execute();
-     },
-   },
-   ```
-
-4. Render the question in `CandidateFormPage.tsx`:
-
-   ```tsx
-   <Question id="linkedin" required>
-     <Title>What's your LinkedIn?</Title>
-     <UrlInput placeholder="https://linkedin.com/in/…" />
-   </Question>
-   ```
-
-5. Update `loadSession` in `candidateForm.ts` to return the new field
-   so it rehydrates on refresh.
+   `apps/server/forms/candidate-form-schema.ts`.
+2. Use `schema-mutation` to add the appropriate column/table to the DB.
+3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`.
+4. Render the question in `CandidateFormPage.tsx`.
+5. Update `loadSession` in `candidateForm.ts` to return the new field.
 
 ### Add a file question
 
