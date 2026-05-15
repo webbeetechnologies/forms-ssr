@@ -101,10 +101,10 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    protected by default.
 6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
-7. **Always run `pnpm build`** to verify TypeScript before declaring
-   work done. `pnpm build` also runs the build-time form-config check
-   (see rule 9). `pnpm lint` is currently broken at the repo root for
-   unrelated reasons; rely on `pnpm build`.
+7. **Always run `pnpm build` and `pnpm lint`** to verify TypeScript +
+   lint rules before declaring work done. `pnpm build` also runs the
+   build-time form-config check (see rule 9). `pnpm lint` enforces a
+   hard ban on `any` (see rule 10).
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
@@ -121,6 +121,18 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    * Keep `CandidateFormBody.tsx` (the shared step tree) free of side
      effects so it renders cleanly in jsdom.
    * Docs: `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md`.
+10. **No `any` — ever.** `eslint.config.js` enforces
+    `@typescript-eslint/no-explicit-any: error`, which blocks both
+    `: any` annotations and `as any` casts. The rule exists because
+    `defineForm`'s default validators are strict about runtime shapes
+    (e.g. `multiple_choice` expects `string[]`); silently coercing
+    through `any` at the client/server boundary is the single fastest
+    way to break autosave or write a wrong shape into TaylorDB.
+    * If TypeScript can't infer a value, narrow with `unknown` + a
+      type guard, or import the proper type from the source package.
+    * The only file allowed to contain `any` is the generated
+      `apps/server/taylordb/types.ts`, which is excluded from lint.
+    * Run `pnpm lint` before declaring work done.
 
 ### Authoritative library docs (already in node_modules)
 
@@ -273,8 +285,6 @@ HTML argument is a complete, self-contained submission summary.
 * `@taylordb/forms-ui` v0.2.5+ validates `<Question>` order against
   `sharedSteps` order at runtime — a mismatch throws an error. It also
   throws on duplicate step ids. Keep JSX order in sync with `defineForm`.
-* `pnpm lint` at the repo root currently fails due to an unrelated
-  ESLint config issue. Use `pnpm build` for verification.
 
 ---
 
