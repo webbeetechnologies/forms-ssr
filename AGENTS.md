@@ -77,6 +77,17 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    *   `UrlInput` -> `url`
    *   `Dropdown` -> `select`
    *   `MultipleChoice` -> `select` (with `isSingle = false`)
+       * **Single-select + `MultipleChoice` gotcha.** If you bind a
+         `MultipleChoice` question to a TaylorDB `select` column where
+         `isSingle = true`, do NOT normalize the value to a string on
+         the frontend. `defineForm`'s default `validate` for the
+         `multiple_choice` handler expects `string[]`, so coercing to a
+         string client-side will fail validation and block autosave.
+         Keep the answer as `string[]` end-to-end and unwrap it to a
+         single string **on the server, right before the
+         `queryBuilder` write** (e.g. `value[0] ?? null`). The same
+         applies in reverse on `loadSession` — wrap the DB string back
+         into `[value]` before returning it to the client.
    *   `YesNo` -> `checkbox`
    *   `Rating` / `Scale` -> `rating`
    *   `Legal` -> `checkbox`
