@@ -50,7 +50,10 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 | 2 | `apps/server/forms/candidate-form-schema.ts` | Shared steps + validation. |
 | 3 | `apps/server/routers/candidateForm.ts` | Server-side autosave actions + resolvers. |
 | 4 | `apps/server/routers/upload.ts` | File upload mutation. |
-| 5 | `apps/client/src/pages/CandidateFormPage.tsx` | The form itself. |
+| 5 | `apps/client/src/pages/CandidateFormPage.tsx` | The form page (autosave + theme). |
+| 6 | `apps/client/src/pages/CandidateFormBody.tsx` | The `<Question>` JSX tree, shared with the build-time check. |
+| 7 | `apps/client/src/candidate-form-check.tsx` | Build-time form-config check entry (consumed by `formsFormCheckPlugin`). |
+| 8 | `apps/client/vite.config.ts` | Wires `formsFormCheckPlugin` — DO NOT REMOVE. |
 
 ---
 
@@ -88,11 +91,25 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
 7. **Always run `pnpm build`** to verify TypeScript before declaring
-   work done. `pnpm lint` is currently broken at the repo root for
+   work done. `pnpm build` also runs the build-time form-config check
+   (see rule 9). `pnpm lint` is currently broken at the repo root for
    unrelated reasons; rely on `pnpm build`.
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
+9. **NEVER remove `formsFormCheckPlugin` from `apps/client/vite.config.ts`.**
+   This Vite plugin (from `@taylordb/forms-ui`) SSR-mounts
+   `src/candidate-form-check.tsx` in jsdom during `vite build` and
+   fails the build if the JSX step tree drifts from `sharedSteps`
+   (wrong order, missing or duplicate step ids, etc.). It is our only
+   automatic guard against schema/JSX drift.
+   * Keep the plugin enabled.
+   * Keep `jsdom` in `apps/client` devDependencies.
+   * Keep `@taylordb/forms-ui` up to date so the check stays in sync
+     with the runtime error boundary.
+   * Keep `CandidateFormBody.tsx` (the shared step tree) free of side
+     effects so it renders cleanly in jsdom.
+   * Docs: `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md`.
 
 ### Authoritative library docs (already in node_modules)
 
@@ -104,6 +121,7 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 | Autosave (fetch + tRPC) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
 | Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
 | Recipes & pitfalls | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
+| Build-time form-config check (Vite plugin) | `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md` |
 | Bigger example | `apps/client/node_modules/@taylordb/forms-ui/example.md` |
 | forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
 | forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |
@@ -122,8 +140,13 @@ When you touch ANY `@taylordb/*` package and aren't sure of an API,
    `apps/server/forms/candidate-form-schema.ts`.
 2. Use `schema-mutation` to add the appropriate column/table to the DB.
 3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`.
-4. Render the question in `CandidateFormPage.tsx`.
+4. Render the `<Question id="…">` in
+   `apps/client/src/pages/CandidateFormBody.tsx` (NOT directly in
+   `CandidateFormPage.tsx`). The body is shared with the build-time
+   form-config check entry.
 5. Update `loadSession` in `candidateForm.ts` to return the new field.
+6. Run `pnpm --filter @repo/client build` — the form-config check
+   plugin will fail the build if the body and `sharedSteps` drift.
 
 ### Add a file question
 

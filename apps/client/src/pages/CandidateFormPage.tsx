@@ -1,14 +1,5 @@
 import {
-  Description,
-  EndScreen,
-  FileUpload,
   Form,
-  PhoneInput,
-  Question,
-  TextInput,
-  Title,
-  VideoQuestion,
-  WelcomeScreen,
   createAutosaveBootstrap,
   createFileUploadMapper,
   createTrpcAutosaveClient,
@@ -21,6 +12,7 @@ import {
 import { candidateForm } from "@repo/server/forms/candidate-form-schema";
 
 import { trpcVanilla } from "../lib/trpc-vanilla";
+import { CandidateFormBody } from "./CandidateFormBody";
 
 /**
  * Candidate form — Typeform-style flow with autosave.
@@ -33,7 +25,10 @@ import { trpcVanilla } from "../lib/trpc-vanilla";
  * │ 3. File mappers     — upload bytes through `upload.uploadCandidateFile` │
  * │ 4. Provider         — bootstraps the session before rendering <Form>    │
  * │ 5. Status banner    — fixed pill showing Saving / Saved / Error         │
- * │ 6. <Form>           — declarative steps. `id` MUST match shared schema. │
+ * │ 6. <Form>           — wraps `<CandidateFormBody>` (the step tree).      │
+ * │                       The body lives in `CandidateFormBody.tsx` so the  │
+ * │                       same JSX can be statically validated at build     │
+ * │                       time by `formsFormCheckPlugin` in vite.config.ts. │
  * └─────────────────────────────────────────────────────────────────────────┘
  *
  * The schema (`candidateForm`) lives in the server package and is imported
@@ -171,15 +166,18 @@ function SessionBanner() {
 
 // ─── 6. The form itself ──────────────────────────────────────────────────
 //
-// Each step is one JSX element. Question `id` must match the shared schema
-// step `id`. Welcome / Statement / EndScreen don't appear in `sharedSteps`
-// (they don't collect answers).
+// The step tree lives in `CandidateFormBody`. Question `id` must match
+// the shared schema step `id`. Welcome / Statement / EndScreen don't
+// appear in `sharedSteps` (they don't collect answers).
 //
 // To add a new question:
 //   1. Add the step to `sharedSteps` in `candidate-form-schema.ts`.
-//   2. Add a matching `<Question id="...">` here.
+//   2. Add a matching `<Question id="...">` in `CandidateFormBody.tsx`.
 //   3. Add a `save` resolver in `apps/server/routers/candidateForm.ts`.
 //   4. Add the column to the `candidates` table via schema mutation.
+//
+// The `formsFormCheckPlugin` in `vite.config.ts` will fail `pnpm build`
+// if the body and `sharedSteps` drift out of sync.
 export default function CandidateFormPage() {
   return (
     <CandidateAutosaveProvider
@@ -197,58 +195,7 @@ export default function CandidateFormPage() {
     >
       <Form keyboard theme={purpleTheme}>
         <SessionBanner />
-
-        <WelcomeScreen id="welcome" buttonText="Start application">
-          <Title>Apply to join the team.</Title>
-          <Description>
-            Takes about two minutes. Your answers save as you go — refresh
-            any time to pick up where you left off.
-          </Description>
-        </WelcomeScreen>
-
-        <Question id="name" required>
-          <Title>What's your full name?</Title>
-          <TextInput autoFocus placeholder="Jane Doe" />
-        </Question>
-
-        <Question id="email" required>
-          <Title>Where can we email you?</Title>
-          <Description>
-            We'll only use this to follow up on your application.
-          </Description>
-          <TextInput placeholder="jane@example.com" />
-        </Question>
-
-        <Question id="phone" required>
-          <Title>What's the best phone number to reach you?</Title>
-          <PhoneInput defaultCountry="US" placeholder="+1 555 123 4567" />
-        </Question>
-
-        <Question id="resume" required>
-          <Title>Upload your resume.</Title>
-          <Description>PDF, DOC, or DOCX. Max 10&nbsp;MB.</Description>
-          <FileUpload
-            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            maxSize={10 * 1024 * 1024}
-          />
-        </Question>
-
-        <Question id="videoIntro" required>
-          <Title>Record a short video introduction.</Title>
-          <Description>
-            Up to two minutes. Tell us a little about yourself and why
-            you're applying.
-          </Description>
-          <VideoQuestion maxDurationSeconds={120} />
-        </Question>
-
-        <EndScreen id="done" buttonText="Submit application">
-          <Title>Ready to send it in?</Title>
-          <Description>
-            Thanks for taking the time. Once you submit, our team will
-            review your application and get back to you.
-          </Description>
-        </EndScreen>
+        <CandidateFormBody />
       </Form>
     </CandidateAutosaveProvider>
   );

@@ -40,8 +40,12 @@ app/
 │   │       ├── lib/
 │   │       │   ├── trpc.ts                    # React-Query tRPC hooks
 │   │       │   └── trpc-vanilla.ts            # Vanilla proxy (used by forms-ui autosave)
-│   │       └── pages/
-│   │           └── CandidateFormPage.tsx      # ← THE form
+│   │       ├── pages/
+│   │       │   ├── CandidateFormPage.tsx      # ← THE form (autosave + theme)
+│   │       │   └── CandidateFormBody.tsx      # Shared `<Question>` JSX tree
+│   │       └── candidate-form-check.tsx       # Build-time form-config check entry
+│   │
+│   │   vite.config.ts wires `formsFormCheckPlugin` — DO NOT REMOVE.
 │   │
 │   └── server/                                # Express + tRPC backend
 │       ├── index.ts                           # Express bootstrap
@@ -111,6 +115,17 @@ pnpm install
 pnpm build
 ```
 
+`pnpm build` also runs the **form-config check** plugin
+(`formsFormCheckPlugin` from `@taylordb/forms-ui`, wired in
+`apps/client/vite.config.ts`). The plugin SSR-loads
+`apps/client/src/candidate-form-check.tsx`, mounts the form in jsdom,
+and fails the build if the JSX step tree drifts from `sharedSteps`
+(wrong order, missing or duplicate step ids, etc.). **Do not remove
+this plugin** — it is our only automatic guard against schema/JSX
+drift. Keep `@taylordb/forms-ui` up to date and keep `jsdom` in
+`apps/client` devDependencies so the check stays accurate. Plugin docs:
+`apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md`.
+
 The candidate form opens at the root URL of the client service (configured
 in `taylordb.yml`).
 
@@ -126,9 +141,12 @@ Open these three files in order:
    stable `id`, a handler `type` (`text`, `email`, `phone_number`,
    `file_upload`, `multiple_choice`, `rating`, `yes_no`, …), and an
    optional `validate(value)`.
-2. **`apps/client/src/pages/CandidateFormPage.tsx`** — add a `<Question
+2. **`apps/client/src/pages/CandidateFormBody.tsx`** — add a `<Question
    id="…">` whose `id` matches the schema. Pick the right input from
-   `@taylordb/forms-ui` (see the inputs reference linked below).
+   `@taylordb/forms-ui` (see the inputs reference linked below). The
+   body lives in its own file so the build-time form-config check
+   plugin can re-render it in jsdom and fail the build on schema/JSX
+   drift.
 3. **`apps/server/routers/candidateForm.ts`** — add a `save` resolver
    that writes the value to the database.
 
@@ -187,6 +205,7 @@ behaviour:
 | Autosave (fetch + tRPC variants) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
 | Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
 | Recipes & gotchas | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
+| Build-time form-config check (Vite plugin) | `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md` |
 | forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
 | forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |
 | Query builder | `apps/server/node_modules/@taylordb/query-builder/llm.txt` |

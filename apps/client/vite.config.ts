@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import { formsFormCheckPlugin } from "@taylordb/forms-ui/vite-plugin-form-check";
 import path from "node:path";
 import { PassThrough } from "stream";
 import { defineConfig, type ViteDevServer } from "vite";
@@ -46,6 +47,24 @@ Object.keys(originalConsole).forEach((level) => {
 export default defineConfig({
   plugins: [
     react(),
+    // ──────────────────────────────────────────────────────────────────────
+    // Forms config check — DO NOT REMOVE
+    // ─────────────────────────────────────────────────────────────────────
+    //
+    // `formsFormCheckPlugin` (from `@taylordb/forms-ui`) SSR-loads
+    // `src/candidate-form-check.tsx`, mounts it in jsdom, and fails
+    // `vite build` if the JSX step tree drifts from `sharedSteps`
+    // (wrong order, missing or duplicate step ids, etc.).
+    //
+    // This is our build-time guard against schema/JSX drift. Keep this
+    // plugin enabled, keep `jsdom` in devDependencies, and keep
+    // `@taylordb/forms-ui` up to date so the check stays in sync with
+    // the runtime error boundary. See:
+    //   apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md
+    formsFormCheckPlugin({
+      entry: "src/candidate-form-check.tsx",
+      // Default exportName is "default" — matches CandidateFormCheck.
+    }),
     {
       name: "sse-plugin",
       apply: "serve" as const,
