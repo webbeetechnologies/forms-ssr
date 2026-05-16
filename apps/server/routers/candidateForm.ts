@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createFormsActions, FormsError } from "@taylordb/forms-api";
-import type { SessionResolvers, FileAnswer } from "@taylordb/forms-core";
+import {
+  typeHandlers,
+  type SessionResolvers,
+  type FileAnswer,
+} from "@taylordb/forms-core";
 import { TRPCError } from "@trpc/server";
 import { router, publicProcedure } from "../trpc";
 import { candidateForm } from "../forms/candidate-form-schema";
@@ -55,7 +59,11 @@ function toAbsoluteMediaUrl(url: string): string {
   return `${MEDIA_HOST}/${cleaned}`;
 }
 
-const sessionResolvers: SessionResolvers<Context> = {
+const sessionResolvers: SessionResolvers<
+  typeof candidateForm.sharedSteps,
+  typeof typeHandlers,
+  Context
+> = {
   async createSession(ctx) {
     const inserted = await ctx.queryBuilder
       .insertInto("candidates")
