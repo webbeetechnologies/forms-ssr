@@ -109,11 +109,11 @@ importers:
   apps/server:
     dependencies:
       '@taylordb/forms-api':
-        specifier: ^0.2.3
-        version: 0.2.3(@taylordb/query-builder@0.17.0)
+        specifier: ^0.2.4
+        version: 0.2.4(@taylordb/query-builder@0.17.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@taylordb/query-builder':
         specifier: ^0.17.0
         version: 0.17.0
@@ -1092,13 +1092,16 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@taylordb/forms-api@0.2.3':
-    resolution: {integrity: sha512-OUMBNiIQLySGvnuVrEXh6kPXUNDc2F3t3UW6Bb/aFjnqNPfmbdDKd2LU1v1jjcTFXShRNaMUqvS6ZPP0NyC1Fg==}
+  '@taylordb/forms-api@0.2.4':
+    resolution: {integrity: sha512-fpw2SFeJnRKLkuVHp4yJ/KCx5N/YBvapzNakTKImek6oWja8ccDT4E6scdnOzCfrn0nrJSFh3Q2xID6HlnEAdA==}
     peerDependencies:
       '@taylordb/query-builder': '>=0.16'
 
   '@taylordb/forms-core@0.2.2':
     resolution: {integrity: sha512-6urDb+wlISSyKqS81P2eKQTfmlTfsTrtXrc2KYEwwVNj/9kJusmXp+AfkthX9r2b8uhPJSXcVY6V0xsWeQx+Dg==}
+
+  '@taylordb/forms-core@0.2.3':
+    resolution: {integrity: sha512-t0JyO+/tOcuc5ppnAiN8Aw5iHJcREIVF3Kqvwzqr5u0XaCr7APINkOiNib9rSDSXdOZWtv5mSJavSR867N5xOA==}
 
   '@taylordb/forms-ui@0.2.11':
     resolution: {integrity: sha512-veaHVjGTbQLlKdxUHIoISRwH8iVX6DE1/4jodH3t47pBpaEO+DNC32laGv2WlnXEM/YQKrN57AKcoYMJ5rm6fw==}
@@ -3233,12 +3236,16 @@ snapshots:
       '@tanstack/query-core': 5.90.16
       react: 19.2.0
 
-  '@taylordb/forms-api@0.2.3(@taylordb/query-builder@0.17.0)':
+  '@taylordb/forms-api@0.2.4(@taylordb/query-builder@0.17.0)':
     dependencies:
-      '@taylordb/forms-core': 0.2.2
+      '@taylordb/forms-core': 0.2.3
       '@taylordb/query-builder': 0.17.0
 
   '@taylordb/forms-core@0.2.2':
+    dependencies:
+      zod: 3.25.76
+
+  '@taylordb/forms-core@0.2.3':
     dependencies:
       zod: 3.25.76
 
