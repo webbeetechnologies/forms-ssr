@@ -12,7 +12,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.16",
     "@taylordb/forms-core": "^0.2.2",
-    "@taylordb/forms-ui": "^0.2.10",
+    "@taylordb/forms-ui": "^0.2.11",
     "@trpc/client": "^11.8.1",
     "@trpc/react-query": "^11.8.1",
     "libphonenumber-js": "^1.13.1",
