@@ -417,4 +417,5 @@ type CandidatesTable = {
   resume: AttachmentColumnType<false>;
   videoIntro: AttachmentColumnType<false>;
   submitted: CheckboxColumnType<false>;
+  test: TextColumnType<false>;
   };
