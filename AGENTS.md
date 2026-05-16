@@ -278,8 +278,11 @@ HTML argument is a complete, self-contained submission summary.
 * Inputs inside a `<Question>` should NOT pass an `id` prop — they bind
   to the surrounding question via context.
 * Composite inputs (like `AddressInput` parts) use `name`, not `id`.
-* `YesNo` stores the strings `"yes"` / `"no"`. If your handler is
-  `yes_no` (boolean), add a `toApiValue: (v) => v === "yes"` mapper.
+* `YesNo` stores a boolean (`true` / `false`) since
+  `@taylordb/forms-ui` v0.2.10 — it matches the core `yes_no`
+  handler / TaylorDB `checkbox` column directly. No `toApiValue`
+  mapper is needed. (Earlier versions stored `"yes"` / `"no"`
+  strings.)
 * The autosave session id is read from a cookie called
   `taylordb_forms_session_candidate`. Clearing it forces a new session.
 * `@taylordb/forms-ui` v0.2.5+ validates `<Question>` order against
