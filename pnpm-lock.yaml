@@ -42,11 +42,11 @@ importers:
         specifier: ^0.2.4
         version: 0.2.4
       '@taylordb/forms-taylordb':
-        specifier: ^0.1.1
-        version: 0.1.1(@taylordb/query-builder@0.18.0)
+        specifier: ^0.1.5
+        version: 0.1.5(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-ui':
-        specifier: ^0.2.13
-        version: 0.2.13(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
+        specifier: ^0.2.16
+        version: 0.2.16(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
       '@taylordb/query-builder':
         specifier: ^0.18.0
         version: 0.18.0
@@ -115,14 +115,14 @@ importers:
   apps/server:
     dependencies:
       '@taylordb/forms-api':
-        specifier: ^0.2.5
-        version: 0.2.5(@taylordb/query-builder@0.18.0)
+        specifier: ^0.2.6
+        version: 0.2.6(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-core':
         specifier: ^0.2.4
         version: 0.2.4
       '@taylordb/forms-taylordb':
-        specifier: ^0.1.1
-        version: 0.1.1(@taylordb/query-builder@0.18.0)
+        specifier: ^0.1.5
+        version: 0.1.5(@taylordb/query-builder@0.18.0)
       '@taylordb/query-builder':
         specifier: ^0.18.0
         version: 0.18.0
@@ -1101,21 +1101,21 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@taylordb/forms-api@0.2.5':
-    resolution: {integrity: sha512-FIjd8bKn/vYpseUHJgzSzuXxL+F0Kaokc+HzICLztSlD1HaZ6vuLNkuD9b2hV23HSn7+qutIhkjhyF/1Mo3laQ==}
+  '@taylordb/forms-api@0.2.6':
+    resolution: {integrity: sha512-O9ihVPbFZNVT25bO8Rvf4HSfLMOyftlMo7XeXqD6g6PAjtFUvkIk0gzajjl1dS+tVHneQzl3Sv4FNfX5ShcpIA==}
     peerDependencies:
       '@taylordb/query-builder': '>=0.16'
 
   '@taylordb/forms-core@0.2.4':
     resolution: {integrity: sha512-/x6BA9UVPtLNWkntESrG5C89BAk+oBK0A6Mgy1YIYu1q/xtTGsc+zlNE80HlIfuEoYjn7uIF940jXdUlJK6ruw==}
 
-  '@taylordb/forms-taylordb@0.1.1':
-    resolution: {integrity: sha512-8UKfqyxAF+PXC/vPmWQ2CxSbbO9NTW7VsmJdcLhIspDaWa4A23/6WGrSq5ku46ajGQm7AM87acPNinbNx5O5oQ==}
+  '@taylordb/forms-taylordb@0.1.5':
+    resolution: {integrity: sha512-eCL6AArfdwaoNtKUKlkd9HeROmju6wCstQzBN0jxFTOW7Gbmkl3r9xkLuRSn447YnzOKqpm7r/2eg4WuZLuhVw==}
     peerDependencies:
       '@taylordb/query-builder': '>=0.18'
 
-  '@taylordb/forms-ui@0.2.13':
-    resolution: {integrity: sha512-ZNj3TkzEmW9HK1TI0a+n8PGMFYQVAqqK4lJQEyswkpFiAy9slG/QR2sMDsmyIZbIDQY/10MTQFajZ6RDzLJufA==}
+  '@taylordb/forms-ui@0.2.16':
+    resolution: {integrity: sha512-705vuRQ/iTgFpdusXJqGfOJCQjY1/GNqwuQox0VfuhEiAgTGV10LkezBm48Q6AZETrP6gD47zrgnAxVIVfwzew==}
     peerDependencies:
       jsdom: '>=24'
       react: '>=18'
@@ -3247,7 +3247,7 @@ snapshots:
       '@tanstack/query-core': 5.90.16
       react: 19.2.0
 
-  '@taylordb/forms-api@0.2.5(@taylordb/query-builder@0.18.0)':
+  '@taylordb/forms-api@0.2.6(@taylordb/query-builder@0.18.0)':
     dependencies:
       '@taylordb/forms-core': 0.2.4
       '@taylordb/query-builder': 0.18.0
@@ -3256,12 +3256,13 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@taylordb/forms-taylordb@0.1.1(@taylordb/query-builder@0.18.0)':
+  '@taylordb/forms-taylordb@0.1.5(@taylordb/query-builder@0.18.0)':
     dependencies:
+      '@taylordb/forms-api': 0.2.6(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-core': 0.2.4
       '@taylordb/query-builder': 0.18.0
 
-  '@taylordb/forms-ui@0.2.13(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
+  '@taylordb/forms-ui@0.2.16(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
     dependencies:
       '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@taylordb/forms-core': 0.2.4

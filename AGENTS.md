@@ -75,19 +75,15 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    *   `DateInput` -> `date`
    *   `PhoneInput` -> `phoneNumber`
    *   `UrlInput` -> `url`
-   *   `Dropdown` -> `select`
-   *   `MultipleChoice` -> `select` (with `isSingle = false`)
-       * **Single-select + `MultipleChoice` gotcha.** If you bind a
-         `MultipleChoice` question to a TaylorDB `select` column where
-         `isSingle = true`, do NOT normalize the value to a string on
-         the frontend. `defineForm`'s default `validate` for the
-         `multiple_choice` handler expects `string[]`, so coercing to a
-         string client-side will fail validation and block autosave.
-         Keep the answer as `string[]` end-to-end and unwrap it to a
-         single string **on the server, right before the
-         `queryBuilder` write** (e.g. `value[0] ?? null`). The same
-         applies in reverse on `loadSession` — wrap the DB string back
-         into `[value]` before returning it to the client.
+   *   `Dropdown` -> `select` (single — scalar `string`)
+   *   `SingleChoice` -> `select` (single — scalar `string`). Use for
+       `dropdown` / `picture_choice` style single-value choice UIs.
+       The build-time form-config check will fail if you use
+       `<MultipleChoice>` on a `dropdown` / `picture_choice` step.
+   *   `MultipleChoice` -> `select` (with `isSingle = false`). Stores
+       `string[]`. ONLY use this for `multiple_choice` / `checkbox`
+       style multi-select fields — never for single-select. For
+       single-select, use `<SingleChoice>` or `<Dropdown>` instead.
    *   `YesNo` -> `checkbox`
    *   `Rating` / `Scale` -> `rating`
    *   `Legal` -> `checkbox`
