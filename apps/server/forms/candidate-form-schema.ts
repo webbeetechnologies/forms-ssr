@@ -135,6 +135,28 @@ export const candidateForm = defineTaylorForm(taylorSchema)({
         return null;
       },
     },
+    {
+      // Single-select. `taylorSchema.candidates.workAuthorization` is
+      // `select { mode: 'single' }`, which the adapter pairs with
+      // `dropdown` (and `picture_choice`). `<Dropdown>` stores a scalar
+      // string, so no array unwrap is needed end-to-end. Choices are
+      // pinned at the TaylorDB level — the docstring in `inputs.md`
+      // covers the UI side.
+      taylordbFieldName: "workAuthorization",
+      questionType: "dropdown",
+    },
+    {
+      // Checkbox column → handler `yes_no` (or `legal`). Since
+      // `@taylordb/forms-ui >= 0.2.10`, `<YesNo>` stores a boolean
+      // directly — matches the column type with no mapper. (`legal`
+      // would also fit if we wanted the long-form A/B agreement UI.)
+      taylordbFieldName: "marketingConsent",
+      questionType: "yes_no",
+      // Optional — let the candidate skip it. With `optional`, the
+      // built-in `yes_no` validator allows `undefined`; without it,
+      // the candidate must actively pick Yes or No.
+      optional: true,
+    },
   ] as const,
   taylordb: {
     table: "candidates",

@@ -1,5 +1,6 @@
 import {
   Description,
+  Dropdown,
   EndScreen,
   FileUpload,
   PhoneInput,
@@ -8,6 +9,7 @@ import {
   Title,
   VideoQuestion,
   WelcomeScreen,
+  YesNo,
 } from "@taylordb/forms-ui";
 
 /**
@@ -74,6 +76,36 @@ export function CandidateFormBody() {
           you're applying.
         </Description>
         <VideoQuestion maxDurationSeconds={120} />
+      </Question>
+
+      <Question id="workAuthorization" required>
+        <Title>What's your work authorization?</Title>
+        <Description>
+          We use this to figure out next steps for visa or sponsorship
+          paperwork — pick whichever fits best.
+        </Description>
+        <Dropdown placeholder="Select your status…" searchable>
+          <Dropdown.Option value="US citizen">US citizen</Dropdown.Option>
+          <Dropdown.Option value="Permanent resident">
+            Permanent resident (green card)
+          </Dropdown.Option>
+          <Dropdown.Option value="Visa holder">
+            Currently on a work visa
+          </Dropdown.Option>
+          <Dropdown.Option value="Need sponsorship">
+            Will need sponsorship
+          </Dropdown.Option>
+          <Dropdown.Option value="Other">Something else</Dropdown.Option>
+        </Dropdown>
+      </Question>
+
+      <Question id="marketingConsent">
+        <Title>Can we keep you in mind for future roles?</Title>
+        <Description>
+          If this one doesn't work out, we'd love to reach back out when
+          something else opens up. Totally optional.
+        </Description>
+        <YesNo yesLabel="Yes, please" noLabel="No thanks" />
       </Question>
 
       <EndScreen id="done" buttonText="Submit application">
