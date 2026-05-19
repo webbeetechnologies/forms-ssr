@@ -1,53 +1,96 @@
-import { defineForm } from "@taylordb/forms-core";
+import { defineTaylorForm } from "@taylordb/forms-taylordb";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { taylorSchema } from "../taylordb/types";
 
 /**
- * Shared schema for the Candidate form.
+ * Shared schema for the Candidate form — single source of truth.
  *
- * This file is the single source of truth for the form's shape. It is
- * imported by BOTH:
+ * Imported by BOTH:
+ *   - the server router (`apps/server/routers/candidateForm.ts`) — to
+ *     auto-generate `resolvers` + `session` via `candidateForm.adapter(...)`,
+ *   - the client page (`apps/client/src/pages/CandidateFormPage.tsx`) — for
+ *     local validation + autosave bootstrap (`candidateForm.sharedSteps`).
  *
- *   - the server (`apps/server/routers/candidateForm.ts`) — for validation +
- *     typed save resolvers via `candidateForm.resolvers(...)`,
- *   - the client (`apps/client/src/pages/CandidateFormPage.tsx`) — to drive
- *     the same local validation + autosave bootstrap.
+ * Re-exported through the `@repo/server/forms/candidate-form-schema` subpath
+ * (see `apps/server/package.json` → `exports`).
  *
- * It re-exports through the `@repo/server/forms/candidate-form-schema`
- * subpath (see `apps/server/package.json` → `exports`) so the client can
- * import it as `import { candidateForm } from
- * "@repo/server/forms/candidate-form-schema"`.
+ * ─── How `defineTaylorForm` works ─────────────────────────────────────────
  *
- * ─── How to add / change a question ────────────────────────────────────────
+ * `defineTaylorForm(taylorSchema)(config)` is curried:
  *
- *   1. Add a step here with a stable string `id` and a handler `type` from
- *      `typeHandlers` in `@taylordb/forms-core` (e.g. `text`, `email`,
- *      `phone_number`, `file_upload`, `multiple_choice`, `rating`, …).
- *      See `apps/client/node_modules/@taylordb/forms-core/docs/api.md`.
+ *   1. The first call binds the runtime `taylorSchema` (from
+ *      `@taylordb/query-builder`'s generated `types.ts`). That schema
+ *      carries every column's runtime descriptor — type, required, select
+ *      mode, attachment-ness — so the adapter doesn't have to guess.
  *
- *   2. (Optional) Provide a `validate(value)` that runs on BOTH client and
- *      server. Return `null` for valid, or a string error message.
+ *   2. The second call validates the form config against the schema at
+ *      compile time (column existence + question↔column-type pairing).
  *
- *   3. Add a matching `<Question id="…">` in `CandidateFormPage.tsx` whose
- *      `id` matches exactly.
+ * The result extends a `defineForm` result, so anything from forms-core /
+ * forms-ui that expects `.sharedSteps` / `.mappers(...)` still works.
  *
- *   4. Add a `save(ctx, sessionId, value)` entry in `resolvers` inside
- *      `apps/server/routers/candidateForm.ts` that writes the answer to the
- *      database (typically a column on the `candidates` row).
+ * ─── How to add or change a question ──────────────────────────────────────
  *
- *   5. If the column is new, run a schema mutation to add it to the
- *      `candidates` table.
+ *   1. Add a step here with:
+ *        - `taylordbFieldName` — the step id AND the column on `candidates`.
+ *        - `questionType`      — a handler kind from `@taylordb/forms-core`
+ *          (`text`, `email`, `phone_number`, `file_upload`, `rating`, …).
  *
- * ─── What NOT to put here ──────────────────────────────────────────────────
+ *      Compile-time check: the column must exist on `taylorSchema.candidates`
+ *      and its descriptor type must match the `questionType` (e.g.
+ *      `file_upload` → `attachment`, `text/email/phone_number` → `text`).
+ *
+ *   2. (Optional) Provide `validate(value)` — runs on BOTH client and
+ *      server. Returns `null` for valid, or a string error.
+ *
+ *   3. Add a matching `<Question id="…">` in `CandidateFormBody.tsx`
+ *      whose `id` is the SAME string as `taylordbFieldName`.
+ *
+ *   4. If you need a new column, run a schema mutation to add it. Match
+ *      the column type to the `questionType`:
+ *
+ *        text/email/phone_number/website → `singlelineText`
+ *        long_text                       → `longText`
+ *        number/rating/scale             → `number`
+ *        date                            → `date`
+ *        yes_no/legal                    → `checkbox`
+ *        dropdown/picture_choice         → `select` (single)
+ *        multiple_choice                 → `select` (single OR multi)
+ *        file_upload                     → `attachment`
+ *
+ *   5. Run `pnpm --filter @repo/client build` — `formsFormCheckPlugin`
+ *      will fail the build if `<Question>` order drifts from `sharedSteps`.
+ *
+ * ─── Server persistence: no resolver boilerplate ──────────────────────────
+ *
+ * The router calls `candidateForm.adapter(ctx => ctx.queryBuilder)` and
+ * gets back `{ resolvers, session }` already wired to the `candidates`
+ * table. Every step's `save` is auto-generated — no manual
+ * `update().set().where().execute()` per field.
+ *
+ * Attachment columns (`resume`, `videoIntro`) are special-cased by the
+ * adapter:
+ *   - `save` is auto-`'noop'` — bytes go through the dedicated upload
+ *     endpoint, which writes the attachment column directly.
+ *   - `load` rehydrates the stored `string[]` paths into `FileAnswer[]`
+ *     with the media host prefixed (see `taylordb.mediaHost`).
+ *
+ * ─── What NOT to put here ─────────────────────────────────────────────────
  *
  *   `WelcomeScreen`, `Statement`, and `EndScreen` collect no answer — they
- *   are UI-only and must NOT appear in `sharedSteps`. They are declared
- *   directly inside `<Form>` in the page component.
+ *   are UI-only and must NOT appear in `sharedSteps`. They live inside
+ *   `<Form>` in the page component.
+ *
+ * ─── Docs ─────────────────────────────────────────────────────────────────
+ *
+ *   apps/server/node_modules/@taylordb/forms-taylordb/llm.txt
+ *   apps/server/node_modules/@taylordb/forms-taylordb/docs/{api,errors,migration}.md
  */
-export const candidateForm = defineForm({
+export const candidateForm = defineTaylorForm(taylorSchema)({
   sharedSteps: [
     {
-      id: "name",
-      type: "text",
+      taylordbFieldName: "name",
+      questionType: "text",
       validate(value: string) {
         return value.trim().length >= 2
           ? null
@@ -55,14 +98,14 @@ export const candidateForm = defineForm({
       },
     },
     {
-      id: "email",
-      // The `email` handler already enforces RFC-ish email format and
-      // lower-cases the value before saving — no extra validate() needed.
-      type: "email",
+      taylordbFieldName: "email",
+      // The built-in `email` validator enforces RFC-ish format and
+      // lower-cases the value — no extra `validate` needed.
+      questionType: "email",
     },
     {
-      id: "phone",
-      type: "phone_number",
+      taylordbFieldName: "phone",
+      questionType: "phone_number",
       validate(value: string) {
         const trimmed = value.trim();
         if (trimmed === "") return "Phone number is required.";
@@ -72,19 +115,20 @@ export const candidateForm = defineForm({
       },
     },
     {
-      id: "resume",
-      // `file_upload` validates the value as `FileAnswer[]`. The actual file
-      // bytes are uploaded through the dedicated `upload.uploadCandidateFile`
-      // mutation, not through `saveAnswer`. See the mappers in
-      // `CandidateFormPage.tsx`.
-      type: "file_upload",
+      // The adapter sees `attachment` on this column and auto-applies
+      // `save: 'noop'` + the built-in attachment loader. File bytes flow
+      // through `upload.uploadCandidateFile` directly.
+      taylordbFieldName: "resume",
+      questionType: "file_upload",
     },
     {
-      id: "videoIntro",
-      type: "file_upload",
+      taylordbFieldName: "videoIntro",
+      questionType: "file_upload",
+      // 2-minute cap is enforced in the UI via `<VideoQuestion
+      // maxDurationSeconds={120} />`. The built-in `file_upload` validator
+      // already requires a non-empty array, so we just keep the custom
+      // error copy here.
       validate(value: unknown) {
-        // The 2-minute cap is enforced in the UI via `<VideoQuestion
-        // maxDurationSeconds={120} />`. Here we just require *something*.
         if (!Array.isArray(value) || value.length === 0) {
           return "Please record or upload a short video introduction.";
         }
@@ -92,4 +136,11 @@ export const candidateForm = defineForm({
       },
     },
   ] as const,
+  taylordb: {
+    table: "candidates",
+    completedColumn: "submitted",
+    initialValues: { submitted: false },
+    // mediaHost defaults to `https://media.taylordb.ai` — set this if your
+    // attachments are served from a different origin.
+  },
 });
