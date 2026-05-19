@@ -10,12 +10,9 @@ import {
   autoNumberField,
   attachmentField,
   checkboxField,
-  dateField,
   defineTaylorSchema,
-  linkField,
   numberField,
   searchField,
-  selectField,
   textField,
 } from '@taylordb/query-builder';
 import type { InferTaylorDatabase } from '@taylordb/query-builder';
