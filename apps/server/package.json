@@ -17,7 +17,8 @@
   "dependencies": {
     "@taylordb/forms-api": "^0.2.4",
     "@taylordb/forms-core": "^0.2.3",
-    "@taylordb/query-builder": "^0.17.0",
+    "@taylordb/forms-taylordb": "^0.1.0",
+    "@taylordb/query-builder": "^0.18.0",
     "@trpc/server": "^11.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

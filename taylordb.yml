@@ -69,7 +69,7 @@ services:
           TRPC_URL: routing.server.url
 
 taylordb:
-  version: 0.17.0
+  version: 0.18.0
   types:
     - output: apps/server/taylordb/types.ts
       format: typescript

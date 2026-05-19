@@ -39,11 +39,11 @@ importers:
         specifier: ^5.90.16
         version: 5.90.16(react@19.2.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.2
-        version: 0.2.2
+        specifier: ^0.2.3
+        version: 0.2.3
       '@taylordb/forms-ui':
-        specifier: ^0.2.11
-        version: 0.2.11(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
+        specifier: ^0.2.12
+        version: 0.2.12(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
       '@trpc/client':
         specifier: ^11.8.1
         version: 11.8.1(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
@@ -110,13 +110,16 @@ importers:
     dependencies:
       '@taylordb/forms-api':
         specifier: ^0.2.4
-        version: 0.2.4(@taylordb/query-builder@0.17.0)
+        version: 0.2.4(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-core':
         specifier: ^0.2.3
         version: 0.2.3
+      '@taylordb/forms-taylordb':
+        specifier: ^0.1.0
+        version: 0.1.0(@taylordb/query-builder@0.18.0)
       '@taylordb/query-builder':
-        specifier: ^0.17.0
-        version: 0.17.0
+        specifier: ^0.18.0
+        version: 0.18.0
       '@trpc/server':
         specifier: ^11.8.1
         version: 11.8.1(typescript@5.9.3)
@@ -1097,14 +1100,16 @@ packages:
     peerDependencies:
       '@taylordb/query-builder': '>=0.16'
 
-  '@taylordb/forms-core@0.2.2':
-    resolution: {integrity: sha512-6urDb+wlISSyKqS81P2eKQTfmlTfsTrtXrc2KYEwwVNj/9kJusmXp+AfkthX9r2b8uhPJSXcVY6V0xsWeQx+Dg==}
-
   '@taylordb/forms-core@0.2.3':
     resolution: {integrity: sha512-t0JyO+/tOcuc5ppnAiN8Aw5iHJcREIVF3Kqvwzqr5u0XaCr7APINkOiNib9rSDSXdOZWtv5mSJavSR867N5xOA==}
 
-  '@taylordb/forms-ui@0.2.11':
-    resolution: {integrity: sha512-veaHVjGTbQLlKdxUHIoISRwH8iVX6DE1/4jodH3t47pBpaEO+DNC32laGv2WlnXEM/YQKrN57AKcoYMJ5rm6fw==}
+  '@taylordb/forms-taylordb@0.1.0':
+    resolution: {integrity: sha512-HSspuRSGq9NGLqOs2EAQNPyWiXm0Awz8YsnhcXNJOWeuzt5pC4TGtp3CA+ezRfzEMWylnHN8HlmpoUzAxT64cw==}
+    peerDependencies:
+      '@taylordb/query-builder': '>=0.18'
+
+  '@taylordb/forms-ui@0.2.12':
+    resolution: {integrity: sha512-8KnLJc9E7YAeyPc8WRRhpbKuby4gjCqFsAbKHyXFTd1HPVjPQ68XpaElazVfyKfUrk3Dx0hBBDHuq4PYQtXJjw==}
     peerDependencies:
       jsdom: '>=24'
       react: '>=18'
@@ -1116,11 +1121,11 @@ packages:
       vite:
         optional: true
 
-  '@taylordb/query-builder@0.17.0':
-    resolution: {integrity: sha512-IhZZDa3dr4nOZVB8Go9KsOtshJX+rdUWcfN8VCbkuxH9qO2CpiQT1uqnQeoXlOqRqdtXCwevY7fhs34wZLJfOQ==}
+  '@taylordb/query-builder@0.18.0':
+    resolution: {integrity: sha512-4cj6cOEyj56+uw/WsMQ77xvZM+r+7JwU8u47n0J1wh9L1Eozmrz043Ug43FAcY+RfL6Ih+/gpmresZ1k1NXjlA==}
 
-  '@taylordb/shared@0.17.0':
-    resolution: {integrity: sha512-Bp+deONreSCe6xcbXt8sZybO6Tp0+wMSPUGFYR/mWTVLdDrzdXnOuIbvjBTY/a/lJdEE8Vvg7Hghir2Q6Q60kg==}
+  '@taylordb/shared@0.18.0':
+    resolution: {integrity: sha512-FuoK37bOC0yVApseaYoKyLgOFpzKyzKc0B22shvEiXesH5CL/SoMq23zgzChK+rjI48Os+JDLTps4wSznkVi4w==}
 
   '@trpc/client@11.8.1':
     resolution: {integrity: sha512-L/SJFGanr9xGABmuDoeXR4xAdHJmsXsiF9OuH+apecJ+8sUITzVT1EPeqp0ebqA6lBhEl5pPfg3rngVhi/h60Q==}
@@ -3236,23 +3241,24 @@ snapshots:
       '@tanstack/query-core': 5.90.16
       react: 19.2.0
 
-  '@taylordb/forms-api@0.2.4(@taylordb/query-builder@0.17.0)':
+  '@taylordb/forms-api@0.2.4(@taylordb/query-builder@0.18.0)':
     dependencies:
       '@taylordb/forms-core': 0.2.3
-      '@taylordb/query-builder': 0.17.0
-
-  '@taylordb/forms-core@0.2.2':
-    dependencies:
-      zod: 3.25.76
+      '@taylordb/query-builder': 0.18.0
 
   '@taylordb/forms-core@0.2.3':
     dependencies:
       zod: 3.25.76
 
-  '@taylordb/forms-ui@0.2.11(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
+  '@taylordb/forms-taylordb@0.1.0(@taylordb/query-builder@0.18.0)':
+    dependencies:
+      '@taylordb/forms-core': 0.2.3
+      '@taylordb/query-builder': 0.18.0
+
+  '@taylordb/forms-ui@0.2.12(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
     dependencies:
       '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@taylordb/forms-core': 0.2.2
+      '@taylordb/forms-core': 0.2.3
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
       react-phone-number-input: 3.4.16(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -3266,9 +3272,9 @@ snapshots:
       - immer
       - use-sync-external-store
 
-  '@taylordb/query-builder@0.17.0':
+  '@taylordb/query-builder@0.18.0':
     dependencies:
-      '@taylordb/shared': 0.17.0
+      '@taylordb/shared': 0.18.0
       eventemitter3: 5.0.1
       fast-json-patch: 3.1.1
       json-to-graphql-query: 2.3.0
@@ -3280,7 +3286,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@taylordb/shared@0.17.0':
+  '@taylordb/shared@0.18.0':
     dependencies:
       lodash: 4.17.21
 
