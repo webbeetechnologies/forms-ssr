@@ -88,9 +88,59 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    *   `Rating` / `Scale` -> `rating`
    *   `Legal` -> `checkbox`
    *   `FileUpload` / `VideoQuestion` / `AudioQuestion` -> `attachment`
-   *   `AddressInput` -> Create a separate foreign table linked to `candidates` (includes address, address line 2, city, state, zip code, country).
-   *   `ContactInfoInput` -> Create a separate foreign table linked to `candidates` (includes first name, last name, company, email, phone number).
+   *   `AddressInput` -> Add flat columns directly on `candidates` (one
+       per sub-field: address, address line 2, city, state, zip code,
+       country) and wire them up via a **composite schema override**
+       (see rule 4a below). DO NOT use a `link` field or a separate
+       foreign table — composite is simpler and avoids an extra row
+       per session.
+   *   `ContactInfoInput` -> Same pattern as `AddressInput`: add flat
+       columns on `candidates` (first name, last name, company, email,
+       phone number) and use a **composite schema override**. DO NOT
+       use a `link` field / foreign table.
    *   *Note: Ranking is not supported.*
+
+   **4a. Composite override for `AddressInput` / `ContactInfoInput`.**
+   These inputs collect multiple sub-fields under one step id. By
+   default the autosave adapter looks for columns named
+   `<stepId>_<subField>` (e.g. `projectAddress_city`). That naming is
+   almost never what your TaylorDB schema already uses, so you MUST
+   declare the step as `kind: "composite"` and map each sub-field to
+   its real column name. Example:
+
+   ```ts
+   taylordbFieldName: "projectAddress",
+   kind: "composite",
+   fields: {
+     address: { questionType: "text" },
+     address_line_2: { questionType: "text", optional: true },
+     city: { questionType: "text" },
+     state: { questionType: "text" },
+     zip_code: { questionType: "text" },
+     country: { questionType: "text" },
+   },
+   // …
+   steps: {
+     // Composite address step — map each composite field to its real
+     // column on the `candidates` table. Without this override the
+     // adapter would look for `projectAddress_address`,
+     // `projectAddress_city`, etc.
+     projectAddress: {
+       column: {
+         address: "projectAddress",
+         address_line_2: "projectAddressLine2",
+         city: "projectCity",
+         state: "projectAddressState",
+         zip_code: "projectZipCode",
+         country: "projectCountry",
+       },
+     },
+   },
+   ```
+
+   Apply the same pattern to `ContactInfoInput` (map `first_name`,
+   `last_name`, `company`, `email`, `phone_number` to their real
+   columns).
 5. **Never add a per-procedure auth guard.** `createContext` in
    `apps/server/trpc.ts` already throws if the
    `app_access_token` cookie is missing. Every tRPC procedure is
