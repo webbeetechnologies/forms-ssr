@@ -26,10 +26,10 @@ import {
 export function CandidateFormBody() {
   return (
     <>
-      <WelcomeScreen id="welcome" buttonText="Prompt opencode AI to build a form">
+      <WelcomeScreen id="welcome" buttonText="Prompt Taylor to build a form">
         <Title>Build your dream form.</Title>
         <Description>
-          Ask opencode AI to build your desired form. It will replace this placeholder with your form!
+          Ask Taylor to build your desired form. It will replace this placeholder with your form!
         </Description>
       </WelcomeScreen>
 
