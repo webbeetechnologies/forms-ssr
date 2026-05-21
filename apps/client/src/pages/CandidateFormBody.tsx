@@ -1,15 +1,7 @@
 import {
   Description,
-  // Dropdown,
-  EndScreen,
-  // FileUpload,
-  // PhoneInput,
-  // Question,
-  // TextInput,
   Title,
-  // VideoQuestion,
   WelcomeScreen,
-  // YesNo,
 } from "@taylordb/forms-ui";
 
 /**
@@ -34,11 +26,10 @@ import {
 export function CandidateFormBody() {
   return (
     <>
-      <WelcomeScreen id="welcome" buttonText="Start application">
-        <Title>Apply to join the team.</Title>
+      <WelcomeScreen id="welcome" buttonText="Prompt opencode AI to build a form">
+        <Title>Build your dream form.</Title>
         <Description>
-          Takes about two minutes. Your answers save as you go — refresh
-          any time to pick up where you left off.
+          Ask opencode AI to build your desired form. It will replace this placeholder with your form!
         </Description>
       </WelcomeScreen>
 
@@ -110,13 +101,13 @@ export function CandidateFormBody() {
       </Question>
       */}
 
-      <EndScreen id="done" buttonText="Submit application">
+      {/* <EndScreen id="done" buttonText="Submit application">
         <Title>Ready to send it in?</Title>
         <Description>
           Thanks for taking the time. Once you submit, our team will
           review your application and get back to you.
         </Description>
-      </EndScreen>
+      </EndScreen> */}
     </>
   );
 }
