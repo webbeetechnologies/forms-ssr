@@ -12,8 +12,8 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.16",
     "@taylordb/forms-core": "^0.2.4",
-    "@taylordb/forms-taylordb": "^0.1.5",
-    "@taylordb/forms-ui": "^0.2.19",
+    "@taylordb/forms-taylordb": "^0.1.6",
+    "@taylordb/forms-ui": "^0.2.20",
     "@taylordb/query-builder": "^0.18.0",
     "@trpc/client": "^11.8.1",
     "@trpc/react-query": "^11.8.1",
