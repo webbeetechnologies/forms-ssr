@@ -45,8 +45,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-ui':
-        specifier: ^0.2.19
-        version: 0.2.19(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
+        specifier: ^0.2.21
+        version: 0.2.21(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
       '@taylordb/query-builder':
         specifier: ^0.18.0
         version: 0.18.0
@@ -1114,8 +1114,8 @@ packages:
     peerDependencies:
       '@taylordb/query-builder': '>=0.18'
 
-  '@taylordb/forms-ui@0.2.19':
-    resolution: {integrity: sha512-4S+tZj+SwN3j4yN74JqMMmI8XELs+sdH9j22Vp/R56fl1WsXdTxujD7yh0z4zYw+OL9CtfO9hQsWqbXs255Wvg==}
+  '@taylordb/forms-ui@0.2.21':
+    resolution: {integrity: sha512-cFMQqGKDFxwtmhD9Sdn68tG76uTiuro65cddn4jSgt+YXuEE+J8o/jxVTL1LTvZOJEgl60V5enaJa/NMtk3B9g==}
     peerDependencies:
       jsdom: '>=24'
       react: '>=18'
@@ -3262,7 +3262,7 @@ snapshots:
       '@taylordb/forms-core': 0.2.4
       '@taylordb/query-builder': 0.18.0
 
-  '@taylordb/forms-ui@0.2.19(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
+  '@taylordb/forms-ui@0.2.21(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':
     dependencies:
       '@radix-ui/react-select': 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@taylordb/forms-core': 0.2.4
