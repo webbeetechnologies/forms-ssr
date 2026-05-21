@@ -203,18 +203,6 @@ When you touch ANY `@taylordb/*` package and aren't sure of an API,
 
 ## Common tasks
 
-### Replacing the Default Form
-
-When asked to "build a form", "create a form", or implement a new specific form, **REPLACE** the existing `CandidateFormBody.tsx` questions and `candidate-form-schema.ts` steps entirely. DO NOT append new questions after the existing candidate application questions unless explicitly asked to add to the existing form.
-
-**Steps:**
-1. Clear all existing `steps` in `apps/server/forms/candidate-form-schema.ts` (except maybe keeping a basic welcome/end screen if applicable).
-2. Clear all existing `<Question>` components in `apps/client/src/pages/CandidateFormBody.tsx`.
-3. Read `apps/client/src/examples/CandidateFormBody.tsx` if you need to see a reference of how a complete form is built.
-4. Implement the new form's schema and UI components.
-5. Update `taylordb/types.ts` via `schema-mutation` to reflect the new data model, removing old columns if the user consents.
-6. Update the mappers and routers in `apps/server/routers/candidateForm.ts` and `apps/client/src/pages/CandidateFormPage.tsx` to match the new schema.
-
 ### Add a question
 
 1. Add a step to `sharedSteps` in
