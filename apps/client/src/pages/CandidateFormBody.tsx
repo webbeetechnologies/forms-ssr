@@ -1,15 +1,15 @@
 import {
   Description,
-  Dropdown,
+  // Dropdown,
   EndScreen,
-  FileUpload,
-  PhoneInput,
-  Question,
-  TextInput,
+  // FileUpload,
+  // PhoneInput,
+  // Question,
+  // TextInput,
   Title,
-  VideoQuestion,
+  // VideoQuestion,
   WelcomeScreen,
-  YesNo,
+  // YesNo,
 } from "@taylordb/forms-ui";
 
 /**
@@ -42,6 +42,7 @@ export function CandidateFormBody() {
         </Description>
       </WelcomeScreen>
 
+      {/*
       <Question id="name" required>
         <Title>What's your full name?</Title>
         <TextInput autoFocus placeholder="Jane Doe" />
@@ -107,6 +108,7 @@ export function CandidateFormBody() {
         </Description>
         <YesNo yesLabel="Yes, please" noLabel="No thanks" />
       </Question>
+      */}
 
       <EndScreen id="done" buttonText="Submit application">
         <Title>Ready to send it in?</Title>
