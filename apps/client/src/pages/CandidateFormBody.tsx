@@ -28,7 +28,7 @@ export function CandidateFormBody() {
   return (
     <>
       <WelcomeScreen id="welcome" buttonText="Start application">
-        <Title>Apply to join the team.</Title>
+        <Title>Tell Taylor what form you want and instantly get your dream form.</Title>
         <Description>
           Takes about two minutes. Your answers save as you go — refresh
           any time to pick up where you left off.
