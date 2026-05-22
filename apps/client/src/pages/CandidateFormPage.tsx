@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Form,
-  createFileUploadMapper,
   createTrpcAutosaveClient,
   lightTheme,
   useAutosaveStatus,
@@ -10,8 +9,6 @@ import {
   type AutosaveAdapter,
   type FormAnswers,
   type FormTheme,
-  type UploadMediaFileInput,
-  type UploadedMediaFile,
 } from "@taylordb/forms-ui";
 import { candidateForm } from "@repo/server/forms/candidate-form-schema";
 
@@ -89,30 +86,7 @@ const autosaveClientPromise = createTrpcAutosaveClient(
 //   • returns `{ url, name, type, size }` (URL prefixed with the media host).
 //
 // The `sessionId` is read from the resolved autosave client.
-async function uploadCandidateFile(
-  column: "resume" | "videoIntro",
-  input: UploadMediaFileInput,
-): Promise<UploadedMediaFile> {
-  const client = await autosaveClientPromise;
-  const fd = new FormData();
-  fd.set("file", input.file, input.name);
-  fd.set("sessionId", String(client.sessionId));
-  fd.set("column", column);
-  return trpcVanilla.upload.uploadCandidateFile.mutate(fd);
-}
-
-const mappers = candidateForm.mappers({
-  resume: {
-    toApiValue: createFileUploadMapper({
-      uploadFile: (input) => uploadCandidateFile("resume", input),
-    }),
-  },
-  videoIntro: {
-    toApiValue: createFileUploadMapper({
-      uploadFile: (input) => uploadCandidateFile("videoIntro", input),
-    }),
-  },
-});
+const mappers = candidateForm.mappers({});
 
 // ─── 4. Bootstrap provider ───────────────────────────────────────────────
 //

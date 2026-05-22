@@ -8,12 +8,10 @@
 import {
   autoDateField,
   autoNumberField,
-  attachmentField,
   checkboxField,
   defineTaylorSchema,
   numberField,
   searchField,
-  selectField,
   textField,
 } from '@taylordb/query-builder';
 import type { InferTaylorDatabase } from '@taylordb/query-builder';
@@ -35,19 +33,13 @@ export const taylorSchema = defineTaylorSchema({
     avatar: textField({ required: true }),
     searchText: searchField(),
   },
-    "candidates": {
+    "submissions": {
       "id": autoNumberField(),
       "createdAt": autoDateField(),
       "updatedAt": autoDateField(),
       "searchText": searchField(),
-      "name": textField({ required: false }),
-      "email": textField({ required: false }),
-      "phone": textField({ required: false }),
-      "resume": attachmentField({ required: false }),
-      "videoIntro": attachmentField({ required: false }),
-      "submitted": checkboxField({ required: false }),
-      "workAuthorization": selectField({ required: false, mode: 'single', options: ["US citizen", "Permanent resident", "Visa holder", "Need sponsorship", "Other"] as const }),
-      "marketingConsent": checkboxField({ required: false })
+      "submissionId": textField({ required: false }),
+      "submitted": checkboxField({ required: false })
       }
   });
 

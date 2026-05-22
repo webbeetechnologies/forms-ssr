@@ -1,6 +1,4 @@
-import type { FileAnswer } from "@taylordb/forms-core";
 import { defineTaylorForm } from "@taylordb/forms-taylordb";
-import { isValidPhoneNumber } from "libphonenumber-js";
 import { taylorSchema } from "../taylordb/types";
 
 /**
@@ -23,13 +21,6 @@ import { taylorSchema } from "../taylordb/types";
  * step will see `unknown` for its dependencies.
  */
 type CandidateAnswers = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  resume?: FileAnswer[];
-  videoIntro?: FileAnswer[];
-  workAuthorization?: string;
-  marketingConsent?: boolean;
 };
 
 /**
@@ -119,78 +110,9 @@ type CandidateAnswers = {
 export const candidateForm = defineTaylorForm(taylorSchema)
   .withAnswers<CandidateAnswers>()({
   sharedSteps: [
-    {
-      taylordbFieldName: "name",
-      questionType: "text",
-      validate(value: string) {
-        return value.trim().length >= 2
-          ? null
-          : "Please enter your full name (at least 2 characters).";
-      },
-    },
-    {
-      taylordbFieldName: "email",
-      // The built-in `email` validator enforces RFC-ish format and
-      // lower-cases the value — no extra `validate` needed.
-      questionType: "email",
-    },
-    {
-      taylordbFieldName: "phone",
-      questionType: "phone_number",
-      validate(value: string) {
-        const trimmed = value.trim();
-        if (trimmed === "") return "Phone number is required.";
-        return isValidPhoneNumber(trimmed)
-          ? null
-          : "Enter a valid international number with country code.";
-      },
-    },
-    {
-      // The adapter sees `attachment` on this column and auto-applies
-      // `save: 'noop'` + the built-in attachment loader. File bytes flow
-      // through `upload.uploadCandidateFile` directly.
-      taylordbFieldName: "resume",
-      questionType: "file_upload",
-    },
-    {
-      taylordbFieldName: "videoIntro",
-      questionType: "file_upload",
-      // 2-minute cap is enforced in the UI via `<VideoQuestion
-      // maxDurationSeconds={120} />`. The built-in `file_upload` validator
-      // already requires a non-empty array, so we just keep the custom
-      // error copy here.
-      validate(value: unknown) {
-        if (!Array.isArray(value) || value.length === 0) {
-          return "Please record or upload a short video introduction.";
-        }
-        return null;
-      },
-    },
-    {
-      // Single-select. `taylorSchema.candidates.workAuthorization` is
-      // `select { mode: 'single' }`, which the adapter pairs with
-      // `dropdown` (and `picture_choice`). `<Dropdown>` stores a scalar
-      // string, so no array unwrap is needed end-to-end. Choices are
-      // pinned at the TaylorDB level — the docstring in `inputs.md`
-      // covers the UI side.
-      taylordbFieldName: "workAuthorization",
-      questionType: "dropdown",
-    },
-    {
-      // Checkbox column → handler `yes_no` (or `legal`). Since
-      // `@taylordb/forms-ui >= 0.2.10`, `<YesNo>` stores a boolean
-      // directly — matches the column type with no mapper. (`legal`
-      // would also fit if we wanted the long-form A/B agreement UI.)
-      taylordbFieldName: "marketingConsent",
-      questionType: "yes_no",
-      // Optional — let the candidate skip it. With `optional`, the
-      // built-in `yes_no` validator allows `undefined`; without it,
-      // the candidate must actively pick Yes or No.
-      optional: true,
-    },
   ] as const,
   taylordb: {
-    table: "candidates",
+    table: "submissions",
     completedColumn: "submitted",
     initialValues: { submitted: false },
     // mediaHost defaults to `https://media.taylordb.ai` — set this if your
