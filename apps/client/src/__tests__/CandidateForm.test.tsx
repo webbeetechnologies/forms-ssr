@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Form } from "@taylordb/forms-ui";
+import { formsTestIds } from "@taylordb/forms-ui/testing";
 import { candidateForm } from "@repo/server/forms/candidate-form-schema";
 
 import { CandidateFormBody } from "../pages/CandidateFormBody";
@@ -20,7 +21,8 @@ import { CandidateFormBody } from "../pages/CandidateFormBody";
  *     (same shape the build-time form-config check uses in
  *     `candidate-form-check.tsx`). No autosave adapter ⇒ no network.
  *   • Drive interactions via `userEvent` and assert against the
- *     stable `data-testid` hooks documented in
+ *     typed `formsTestIds` builder from `@taylordb/forms-ui/testing`
+ *     so this test never hardcodes the `tf-*` string format. Spec:
  *     `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`.
  *   • Skip the file/video questions in the happy-path walk — they need
  *     real `File` / MediaRecorder plumbing that belongs in an e2e suite,
@@ -46,11 +48,13 @@ describe("CandidateForm — structure", () => {
     renderCandidateForm();
 
     // The form root is always present.
-    expect(await screen.findByTestId("tf-form")).toBeInTheDocument();
+    expect(await screen.findByTestId(formsTestIds.form)).toBeInTheDocument();
 
     // We start on the welcome screen — the welcome "Start application"
-    // button has the testId `tf-welcome-next`.
-    expect(await screen.findByTestId("tf-welcome-next")).toBeInTheDocument();
+    // button is exposed via `formsTestIds.welcomeNext`.
+    expect(
+      await screen.findByTestId(formsTestIds.welcomeNext),
+    ).toBeInTheDocument();
     expect(screen.getByText(/apply to join the team/i)).toBeInTheDocument();
   });
 
@@ -66,13 +70,13 @@ describe("CandidateForm — structure", () => {
     // `taylordbFieldName` to `id` on the resolved schema, so we read
     // `step.id` here even though the source declares `taylordbFieldName`.
     const user = userEvent.setup();
-    await user.click(await screen.findByTestId("tf-welcome-next"));
+    await user.click(await screen.findByTestId(formsTestIds.welcomeNext));
 
     // First step should now be visible.
     const firstStepId = candidateForm.sharedSteps[0].id;
     await waitFor(() => {
       expect(
-        screen.getByTestId(`tf-step-question-${firstStepId}`),
+        screen.getByTestId(formsTestIds.step("question", firstStepId)),
       ).toBeInTheDocument();
     });
 
@@ -92,11 +96,11 @@ describe("CandidateForm — validation + navigation", () => {
     renderCandidateForm();
 
     // Welcome → name question.
-    await user.click(await screen.findByTestId("tf-welcome-next"));
-    await screen.findByTestId("tf-step-question-name");
+    await user.click(await screen.findByTestId(formsTestIds.welcomeNext));
+    await screen.findByTestId(formsTestIds.step("question", "name"));
 
     // Try to advance with no input.
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
 
     // The built-in `required` validator fires before the schema's
     // custom `validate` (which only runs once a value is present), so
@@ -104,34 +108,36 @@ describe("CandidateForm — validation + navigation", () => {
     // testId.
     await waitFor(() => {
       expect(
-        screen.getByTestId("tf-question-error-name"),
+        screen.getByTestId(formsTestIds.questionError("name")),
       ).toBeInTheDocument();
     });
     expect(
-      screen.getByTestId("tf-question-error-name").textContent,
+      screen.getByTestId(formsTestIds.questionError("name")).textContent,
     ).toBeTruthy();
 
     // We should still be on the name step (no advance happened).
-    expect(screen.getByTestId("tf-step-question-name")).toBeInTheDocument();
+    expect(
+      screen.getByTestId(formsTestIds.step("question", "name")),
+    ).toBeInTheDocument();
   });
 
   it("advances from name → email once a valid name is entered", async () => {
     const user = userEvent.setup();
     renderCandidateForm();
 
-    await user.click(await screen.findByTestId("tf-welcome-next"));
-    await screen.findByTestId("tf-step-question-name");
+    await user.click(await screen.findByTestId(formsTestIds.welcomeNext));
+    await screen.findByTestId(formsTestIds.step("question", "name"));
 
-    await user.type(screen.getByTestId("tf-input-name"), "Jane Doe");
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.type(screen.getByTestId(formsTestIds.input("name")), "Jane Doe");
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
 
     // Now on the email question.
     await waitFor(() => {
       expect(
-        screen.getByTestId("tf-step-question-email"),
+        screen.getByTestId(formsTestIds.step("question", "email")),
       ).toBeInTheDocument();
     });
-    expect(screen.getByTestId("tf-input-email")).toBeInTheDocument();
+    expect(screen.getByTestId(formsTestIds.input("email"))).toBeInTheDocument();
   });
 
   it("rejects an invalid email and accepts a valid one", async () => {
@@ -139,33 +145,40 @@ describe("CandidateForm — validation + navigation", () => {
     renderCandidateForm();
 
     // Skip past welcome + name.
-    await user.click(await screen.findByTestId("tf-welcome-next"));
+    await user.click(await screen.findByTestId(formsTestIds.welcomeNext));
     await user.type(
-      await screen.findByTestId("tf-input-name"),
+      await screen.findByTestId(formsTestIds.input("name")),
       "Jane Doe",
     );
-    await user.click(screen.getByTestId("tf-controls-next"));
-    await screen.findByTestId("tf-step-question-email");
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
+    await screen.findByTestId(formsTestIds.step("question", "email"));
 
     // Invalid email → stays on the email step with an error.
-    await user.type(screen.getByTestId("tf-input-email"), "not-an-email");
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.type(
+      screen.getByTestId(formsTestIds.input("email")),
+      "not-an-email",
+    );
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
     await waitFor(() => {
       expect(
-        screen.getByTestId("tf-question-error-email"),
+        screen.getByTestId(formsTestIds.questionError("email")),
       ).toBeInTheDocument();
     });
-    expect(screen.getByTestId("tf-step-question-email")).toBeInTheDocument();
+    expect(
+      screen.getByTestId(formsTestIds.step("question", "email")),
+    ).toBeInTheDocument();
 
     // Fix it and advance.
-    const emailInput = screen.getByTestId("tf-input-email") as HTMLInputElement;
+    const emailInput = screen.getByTestId(
+      formsTestIds.input("email"),
+    ) as HTMLInputElement;
     await user.clear(emailInput);
     await user.type(emailInput, "jane@example.com");
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
 
     await waitFor(() => {
       expect(
-        screen.getByTestId("tf-step-question-phone"),
+        screen.getByTestId(formsTestIds.step("question", "phone")),
       ).toBeInTheDocument();
     });
   });
@@ -175,35 +188,35 @@ describe("CandidateForm — validation + navigation", () => {
     renderCandidateForm();
 
     // Walk: welcome → name → email → phone.
-    await user.click(await screen.findByTestId("tf-welcome-next"));
+    await user.click(await screen.findByTestId(formsTestIds.welcomeNext));
     await user.type(
-      await screen.findByTestId("tf-input-name"),
+      await screen.findByTestId(formsTestIds.input("name")),
       "Jane Doe",
     );
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
     await user.type(
-      await screen.findByTestId("tf-input-email"),
+      await screen.findByTestId(formsTestIds.input("email")),
       "jane@example.com",
     );
-    await user.click(screen.getByTestId("tf-controls-next"));
-    await screen.findByTestId("tf-step-question-phone");
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
+    await screen.findByTestId(formsTestIds.step("question", "phone"));
 
     // The actual `<input type="tel">` rendered by
     // `react-phone-number-input` carries `tf-phone-input-{bindingId}`.
-    // (Note: the upstream `forms-ui/docs/test-ids.md` lists this id as
-    // `tf-phone-number-input-{bindingId}`, but in v0.2.24 the inner
-    // `<input>` actually exposes `tf-phone-input-phone` — the
-    // `tf-phone-number-input` token is on the className, not the
-    // testId. We assert the real DOM here.)
+    // The upstream test-ids.md doc separately lists
+    // `tf-phone-number-input-{bindingId}` for the inner number textbox,
+    // but in `@taylordb/forms-ui` v0.2.25 that id is not rendered in
+    // jsdom — `tf-phone-input-{bindingId}` is the typeable input, so
+    // we use `formsTestIds.phoneInput` here.
     const phoneInput = screen.getByTestId(
-      "tf-phone-input-phone",
+      formsTestIds.phoneInput("phone"),
     ) as HTMLInputElement;
     await user.type(phoneInput, "123");
-    await user.click(screen.getByTestId("tf-controls-next"));
+    await user.click(screen.getByTestId(formsTestIds.controlsNext));
 
     await waitFor(() => {
       expect(
-        screen.getByTestId("tf-question-error-phone"),
+        screen.getByTestId(formsTestIds.questionError("phone")),
       ).toHaveTextContent(/valid international number/i);
     });
   });

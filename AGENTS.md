@@ -153,9 +153,10 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 
    What each piece catches:
    * `pnpm test` — vitest + jsdom + Testing Library suites in
-     `apps/client/src/__tests__/` that walk the form via the stable
-     `data-testid` hooks documented at
-     `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`.
+     `apps/client/src/__tests__/` that walk the form via the typed
+     `formsTestIds` / `formSelectors` helpers from
+     `@taylordb/forms-ui/testing` (spec:
+     `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`).
      Catches *behavioural* drift (validators, navigation, conditional
      `showWhen`, mappers).
    * `tsc -b` (inside `pnpm build`) — type errors across client + server.
@@ -167,7 +168,11 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    `apps/client/src/__tests__/CandidateForm.test.tsx` so the new step
    is covered.** The build-time form-config check only catches
    structural drift; behavioural drift is only caught by `pnpm test`.
-   Prefer the `tf-*` testIds over class names or DOM hierarchy.
+   **Always go through `formsTestIds`** (e.g.
+   `formsTestIds.input("email")`, `formsTestIds.questionError("phone")`,
+   `formsTestIds.step("question", id)`) instead of hardcoding the
+   `tf-*` strings — the test stays in sync with library changes and
+   surfaces drift as a type error, not a runtime miss.
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
