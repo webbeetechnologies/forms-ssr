@@ -147,10 +147,21 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    protected by default.
 6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
-7. **Always run `pnpm build` and `pnpm lint`** to verify TypeScript +
-   lint rules before declaring work done. `pnpm build` also runs the
-   build-time form-config check (see rule 9). `pnpm lint` enforces a
-   hard ban on `any` (see rule 10).
+7. **Always run `pnpm build`, `pnpm lint`, AND `pnpm test`** to verify
+   TypeScript + lint + form behaviour before declaring work done.
+   `pnpm build` also runs the build-time form-config check (see rule
+   9). `pnpm lint` enforces a hard ban on `any` (see rule 10).
+   `pnpm test` runs the candidate-form unit tests in
+   `apps/client/src/__tests__/` (vitest + jsdom + Testing Library)
+   that walk the form via the stable `data-testid` hooks documented
+   at `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`.
+
+   **When you add or change a question, extend the test file
+   (`apps/client/src/__tests__/CandidateForm.test.tsx`) so the new
+   step is covered.** The build-time form-config check only catches
+   structural drift; behavioural drift (validators, navigation,
+   conditional `showWhen`, mappers) is only caught by `pnpm test`.
+   Prefer the `tf-*` testIds over class names or DOM hierarchy.
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
@@ -191,6 +202,7 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
 | Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
 | Recipes & pitfalls | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
 | Build-time form-config check (Vite plugin) | `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md` |
+| Stable test IDs (for `pnpm test`) | `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md` |
 | Bigger example | `apps/client/node_modules/@taylordb/forms-ui/example.md` |
 | forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
 | forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |
