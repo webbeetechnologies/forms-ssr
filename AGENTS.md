@@ -147,21 +147,35 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    protected by default.
 6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
-7. **Always run `pnpm build`, `pnpm lint`, AND `pnpm test`** to verify
-   TypeScript + lint + form behaviour before declaring work done.
-   `pnpm build` also runs the build-time form-config check (see rule
-   9). `pnpm lint` enforces a hard ban on `any` (see rule 10).
-   `pnpm test` runs the candidate-form unit tests in
-   `apps/client/src/__tests__/` (vitest + jsdom + Testing Library)
-   that walk the form via the stable `data-testid` hooks documented
-   at `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`.
+7. **Always run `pnpm build` and `pnpm lint`** before declaring work
+   done. `pnpm build` is wired to run `pnpm test` first — so it is a
+   single command that gates lint, types, the build-time form-config
+   check (see rule 9), AND the candidate-form unit tests. If any of
+   those fail, the build fails. `pnpm lint` is run separately because
+   it also enforces a hard ban on `any` (see rule 10).
 
-   **When you add or change a question, extend the test file
-   (`apps/client/src/__tests__/CandidateForm.test.tsx`) so the new
-   step is covered.** The build-time form-config check only catches
-   structural drift; behavioural drift (validators, navigation,
-   conditional `showWhen`, mappers) is only caught by `pnpm test`.
-   Prefer the `tf-*` testIds over class names or DOM hierarchy.
+   What each piece catches:
+   * `pnpm test` — vitest + jsdom + Testing Library suites in
+     `apps/client/src/__tests__/` that walk the form via the stable
+     `data-testid` hooks documented at
+     `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`.
+     Catches *behavioural* drift (validators, navigation, conditional
+     `showWhen`, mappers).
+   * `tsc -b` (inside `pnpm build`) — type errors across client + server.
+   * `formsFormCheckPlugin` (inside `pnpm build`) — *structural* drift
+     between `sharedSteps` and the JSX body (rule 9).
+   * `pnpm lint` — `any` ban + react-hooks rules.
+
+   **DO NOT use `pnpm build:only` to skip tests.** That escape hatch
+   exists for CI artifact-only stages where tests have already run in
+   a prior step. In an agent session, always use `pnpm build`.
+
+   **When you add or change a question, extend
+   `apps/client/src/__tests__/CandidateForm.test.tsx` so the new step
+   is covered** before running `pnpm build`. The build-time form-config
+   check only catches structural drift; behavioural drift is only
+   caught by the test suite. Prefer the `tf-*` testIds over class
+   names or DOM hierarchy.
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
