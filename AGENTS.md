@@ -258,23 +258,29 @@ Same as above, plus:
 
 ### Conditional question
 
-Use `showWhen` on BOTH the shared step and the `<Question>`. Without it
-on the shared step, the server will refuse to save answers for a step it
-considers hidden.
+Put `showWhen` on the **shared step only**. `<Question>` no longer
+accepts `showWhen` — the UI reads the rule from `sharedSteps` (via the
+autosave adapter) and applies it to both rendering and server-side
+saves. Duplicating it on `<Question>` would just drift from the schema.
 
 ```ts
-// schema
-{ id: "company", type: "text",
-  showWhen: ({ answers }) => answers.role === "founder" }
+// schema (apps/server/forms/candidate-form-schema.ts)
+{
+  taylordbFieldName: "company",
+  questionType: "text",
+  showWhen: (answers) => answers.role === "founder",
+},
 ```
 
 ```tsx
-// page
-<Question id="company" showWhen={({ answers }) => answers.role === "founder"}>
+// page body (apps/client/src/pages/CandidateFormBody.tsx)
+<Question id="company">
   <Title>What are you building?</Title>
   <TextArea />
 </Question>
 ```
+
+`showWhen` receives the answers map directly: `(answers) => boolean`.
 
 ### Change the brand colour
 
@@ -339,6 +345,15 @@ HTML argument is a complete, self-contained submission summary.
   not** add them to `sharedSteps`. They live only inside `<Form>` in the
   page.
 * `<Question id="...">` `id` MUST exactly match the shared step `id`.
+* **`required`, `validate`, and `showWhen` belong on the shared step
+  in `defineTaylorForm` — NOT on `<Question>`.** The shared schema is
+  the single source of truth: the UI reads required-ness from the
+  step's `optional` flag, runs the schema's `validate` on every step,
+  and applies `showWhen` to both rendering and server-side saves.
+  Passing these props on `<Question>` either drifts from the schema or
+  logs a dev warning (and `<Question>` no longer accepts `showWhen` at
+  all). For UI-only forms with no `sharedSteps`, keep using
+  `<StepPanel>` from forms-ui.
 * Inputs inside a `<Question>` should NOT pass an `id` prop — they bind
   to the surrounding question via context.
 * Composite inputs (like `AddressInput` parts) use `name`, not `id`.

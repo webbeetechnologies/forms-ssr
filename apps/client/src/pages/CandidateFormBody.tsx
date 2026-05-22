@@ -42,12 +42,12 @@ export function CandidateFormBody() {
         </Description>
       </WelcomeScreen>
 
-      <Question id="name" required>
+      <Question id="name">
         <Title>What's your full name?</Title>
         <TextInput autoFocus placeholder="Jane Doe" />
       </Question>
 
-      <Question id="email" required>
+      <Question id="email">
         <Title>Where can we email you?</Title>
         <Description>
           We'll only use this to follow up on your application.
@@ -55,12 +55,12 @@ export function CandidateFormBody() {
         <TextInput placeholder="jane@example.com" />
       </Question>
 
-      <Question id="phone" required>
+      <Question id="phone">
         <Title>What's the best phone number to reach you?</Title>
         <PhoneInput defaultCountry="US" placeholder="+1 555 123 4567" />
       </Question>
 
-      <Question id="resume" required>
+      <Question id="resume">
         <Title>Upload your resume.</Title>
         <Description>PDF, DOC, or DOCX. Max 10&nbsp;MB.</Description>
         <FileUpload
@@ -69,7 +69,7 @@ export function CandidateFormBody() {
         />
       </Question>
 
-      <Question id="videoIntro" required>
+      <Question id="videoIntro">
         <Title>Record a short video introduction.</Title>
         <Description>
           Up to two minutes. Tell us a little about yourself and why
@@ -78,7 +78,7 @@ export function CandidateFormBody() {
         <VideoQuestion maxDurationSeconds={120} />
       </Question>
 
-      <Question id="workAuthorization" required>
+      <Question id="workAuthorization">
         <Title>What's your work authorization?</Title>
         <Description>
           We use this to figure out next steps for visa or sponsorship
