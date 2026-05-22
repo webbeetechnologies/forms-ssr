@@ -188,18 +188,16 @@ describe("CandidateForm — validation + navigation", () => {
     await user.click(screen.getByTestId("tf-controls-next"));
     await screen.findByTestId("tf-step-question-phone");
 
-    // Type something that's clearly not a valid international number.
-    // The phone field testId hooks live on wrappers (`tf-phone-input`,
-    // `tf-phone-country`); the actual number textbox is the inner
-    // `<input type="tel">` rendered by `react-phone-number-input`, which
-    // we locate via the question's field wrapper.
-    const phoneField = screen.getByTestId("tf-field-phone");
-    const phoneInput = phoneField.querySelector(
-      'input[type="tel"]',
-    ) as HTMLInputElement | null;
-    if (!phoneInput) {
-      throw new Error("Could not find phone <input type='tel'>");
-    }
+    // The actual `<input type="tel">` rendered by
+    // `react-phone-number-input` carries `tf-phone-input-{bindingId}`.
+    // (Note: the upstream `forms-ui/docs/test-ids.md` lists this id as
+    // `tf-phone-number-input-{bindingId}`, but in v0.2.24 the inner
+    // `<input>` actually exposes `tf-phone-input-phone` — the
+    // `tf-phone-number-input` token is on the className, not the
+    // testId. We assert the real DOM here.)
+    const phoneInput = screen.getByTestId(
+      "tf-phone-input-phone",
+    ) as HTMLInputElement;
     await user.type(phoneInput, "123");
     await user.click(screen.getByTestId("tf-controls-next"));
 
