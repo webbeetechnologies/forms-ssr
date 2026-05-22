@@ -39,11 +39,11 @@ importers:
         specifier: ^5.90.16
         version: 5.90.16(react@19.2.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.5
-        version: 0.2.5
+        specifier: ^0.2.6
+        version: 0.2.6
       '@taylordb/forms-taylordb':
-        specifier: ^0.1.7
-        version: 0.1.7(@taylordb/query-builder@0.18.0)
+        specifier: ^0.1.8
+        version: 0.1.8(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-ui':
         specifier: ^0.2.25
         version: 0.2.25(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
@@ -130,11 +130,11 @@ importers:
         specifier: ^0.2.7
         version: 0.2.7(@taylordb/query-builder@0.18.0)
       '@taylordb/forms-core':
-        specifier: ^0.2.5
-        version: 0.2.5
+        specifier: ^0.2.6
+        version: 0.2.6
       '@taylordb/forms-taylordb':
-        specifier: ^0.1.7
-        version: 0.1.7(@taylordb/query-builder@0.18.0)
+        specifier: ^0.1.8
+        version: 0.1.8(@taylordb/query-builder@0.18.0)
       '@taylordb/query-builder':
         specifier: ^0.18.0
         version: 0.18.0
@@ -1131,8 +1131,11 @@ packages:
   '@taylordb/forms-core@0.2.5':
     resolution: {integrity: sha512-Va90+aGIENnXxJuo0aCymkx99YqbgmgKt7NpzYmM0ZtoL9B06FI3plNjenbQpgYZ4qUPvWsEFgzYUGKfbzI/NQ==}
 
-  '@taylordb/forms-taylordb@0.1.7':
-    resolution: {integrity: sha512-paE7EsrSNSV1Vp5j1By5agyu0180yYR3cnK1laS7FAtZX/R4FD0+O8fxUypuBk4rlL69ATzE4FPEdobbCFCimQ==}
+  '@taylordb/forms-core@0.2.6':
+    resolution: {integrity: sha512-ihU3xwbUi/qf1Bh0+AXJYGZYzZuTk/wRBzJBOdwHWOnVY8ZfD/54J0vuxp+2L6RnSXtqlmmReleAuP99qDgS3w==}
+
+  '@taylordb/forms-taylordb@0.1.8':
+    resolution: {integrity: sha512-AnbEzOfHzsC04HEL0A7jHyh2EbbwFVde2XSZScWTwM3CmhGxFoHML06qyjSsJGNFgqsz4WESTv+bGdV2QEn15g==}
     peerDependencies:
       '@taylordb/query-builder': '>=0.18'
 
@@ -3495,10 +3498,14 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@taylordb/forms-taylordb@0.1.7(@taylordb/query-builder@0.18.0)':
+  '@taylordb/forms-core@0.2.6':
+    dependencies:
+      zod: 3.25.76
+
+  '@taylordb/forms-taylordb@0.1.8(@taylordb/query-builder@0.18.0)':
     dependencies:
       '@taylordb/forms-api': 0.2.7(@taylordb/query-builder@0.18.0)
-      '@taylordb/forms-core': 0.2.5
+      '@taylordb/forms-core': 0.2.6
       '@taylordb/query-builder': 0.18.0
 
   '@taylordb/forms-ui@0.2.25(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(immer@11.0.0)(jsdom@29.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))':

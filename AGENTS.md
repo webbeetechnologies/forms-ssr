@@ -268,13 +268,36 @@ accepts `showWhen` — the UI reads the rule from `sharedSteps` (via the
 autosave adapter) and applies it to both rendering and server-side
 saves. Duplicating it on `<Question>` would just drift from the schema.
 
+`showWhen` receives the in-progress answers map: `(answers) => boolean`.
+**Use `.withAnswers<TAnswers>()` so `answers` is precisely typed** —
+otherwise it falls back to `Record<string, unknown>` and you lose type
+safety on the very predicates you write most often (see
+`apps/server/forms/candidate-form-schema.ts` for the live example):
+
 ```ts
-// schema (apps/server/forms/candidate-form-schema.ts)
-{
-  taylordbFieldName: "company",
-  questionType: "text",
-  showWhen: (answers) => answers.role === "founder",
-},
+import type { FileAnswer } from "@taylordb/forms-core";
+import { defineTaylorForm } from "@taylordb/forms-taylordb";
+
+type CandidateAnswers = {
+  role?: string;
+  company?: string;
+  resume?: FileAnswer[];
+  // … one entry per shared step's `taylordbFieldName`
+};
+
+export const candidateForm = defineTaylorForm(taylorSchema)
+  .withAnswers<CandidateAnswers>()({
+    sharedSteps: [
+      { taylordbFieldName: "role", questionType: "dropdown" },
+      {
+        taylordbFieldName: "company",
+        questionType: "text",
+        // `answers.role` is `string | undefined` here, not `unknown`.
+        showWhen: (answers) => answers.role === "founder",
+      },
+    ] as const,
+    taylordb: { table: "candidates", completedColumn: "submitted" },
+  });
 ```
 
 ```tsx
@@ -285,7 +308,11 @@ saves. Duplicating it on `<Question>` would just drift from the schema.
 </Question>
 ```
 
-`showWhen` receives the answers map directly: `(answers) => boolean`.
+When you add a step, also add its key to `CandidateAnswers` — otherwise
+`showWhen` / `validate` callbacks that depend on the new field will see
+`unknown` for that key. Value types follow the `questionType`:
+`text`/`email`/`phone_number`/`dropdown` → `string`,
+`file_upload` → `FileAnswer[]`, `yes_no` → `boolean`, etc.
 
 ### Change the brand colour
 

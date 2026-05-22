@@ -1,6 +1,36 @@
+import type { FileAnswer } from "@taylordb/forms-core";
 import { defineTaylorForm } from "@taylordb/forms-taylordb";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { taylorSchema } from "../taylordb/types";
+
+/**
+ * Strongly typed in-progress answer map for this form.
+ *
+ * Passed to `defineTaylorForm(taylorSchema).withAnswers<CandidateAnswers>()`
+ * so `showWhen` / `validate` callbacks get a precise `answers` shape
+ * instead of `Record<string, unknown>`. Keys are the `taylordbFieldName`
+ * of each shared step; values match the handler's value type:
+ *
+ *   text / email / phone_number / dropdown → `string`
+ *   file_upload                             → `FileAnswer[]`
+ *   yes_no                                  → `boolean`
+ *
+ * Everything is optional because, during the form, only the steps the
+ * candidate has already answered are present in the map.
+ *
+ * Keep this in sync with the `sharedSteps` array below — add a key here
+ * whenever you add a step, otherwise `showWhen` / `validate` on the new
+ * step will see `unknown` for its dependencies.
+ */
+type CandidateAnswers = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  resume?: FileAnswer[];
+  videoIntro?: FileAnswer[];
+  workAuthorization?: string;
+  marketingConsent?: boolean;
+};
 
 /**
  * Shared schema for the Candidate form — single source of truth.
@@ -86,7 +116,8 @@ import { taylorSchema } from "../taylordb/types";
  *   apps/server/node_modules/@taylordb/forms-taylordb/llm.txt
  *   apps/server/node_modules/@taylordb/forms-taylordb/docs/{api,errors,migration}.md
  */
-export const candidateForm = defineTaylorForm(taylorSchema)({
+export const candidateForm = defineTaylorForm(taylorSchema)
+  .withAnswers<CandidateAnswers>()({
   sharedSteps: [
     {
       taylordbFieldName: "name",
