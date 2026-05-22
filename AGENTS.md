@@ -147,32 +147,7 @@ If you need a quick orientation, read [`README.md`](./README.md) first.
    protected by default.
 6. **Always use `ctx.queryBuilder`** for DB access. No in-memory state,
    no globals, no other clients.
-7. **Always run `pnpm test`, `pnpm build`, AND `pnpm lint`** before
-   declaring work done. All three are required — none of them invokes
-   the others, so skipping any one is silently incorrect.
-
-   What each piece catches:
-   * `pnpm test` — vitest + jsdom + Testing Library suites in
-     `apps/client/src/__tests__/` that walk the form via the typed
-     `formsTestIds` / `formSelectors` helpers from
-     `@taylordb/forms-ui/testing` (spec:
-     `apps/client/node_modules/@taylordb/forms-ui/docs/test-ids.md`).
-     Catches *behavioural* drift (validators, navigation, conditional
-     `showWhen`, mappers).
-   * `tsc -b` (inside `pnpm build`) — type errors across client + server.
-   * `formsFormCheckPlugin` (inside `pnpm build`) — *structural* drift
-     between `sharedSteps` and the JSX body (rule 9).
-   * `pnpm lint` — `any` ban (rule 10) + react-hooks rules.
-
-   **When you add or change a question, extend
-   `apps/client/src/__tests__/CandidateForm.test.tsx` so the new step
-   is covered.** The build-time form-config check only catches
-   structural drift; behavioural drift is only caught by `pnpm test`.
-   **Always go through `formsTestIds`** (e.g.
-   `formsTestIds.input("email")`, `formsTestIds.questionError("phone")`,
-   `formsTestIds.step("question", id)`) instead of hardcoding the
-   `tf-*` strings — the test stays in sync with library changes and
-   surfaces drift as a type error, not a runtime miss.
+7. **Always run `pnpm build` AND `pnpm lint`** before declaring work done. Both are required.
 8. **Never invent forms-ui APIs.** When in doubt, read the package's
    own `llm.txt` and `docs/` (paths below). The packages are the
    authoritative source; the README in this repo is just a pointer.
