@@ -342,6 +342,52 @@ your override. Full list of defaults:
 },
 ```
 
+### Cap input length with `maxLength`
+
+`@taylordb/forms-ui` ≥ 0.2.35 supports a **`maxLength`** prop on
+`TextInput`, `TextArea`, `NumberInput`, and `UrlInput`. It forwards to
+the native HTML `maxLength` attribute (the browser blocks typing past
+the cap) and renders a live `length / maxLength` character counter
+under the field. The counter gets a `tf-counter-at-limit` class when
+the value reaches the cap, so you can style "at limit" in your theme.
+
+```tsx
+// apps/client/src/pages/CandidateFormBody.tsx
+<Question id="bio">
+  <Title>Tell us about yourself</Title>
+  <TextArea maxLength={500} rows={6} placeholder="A few sentences…" />
+</Question>
+
+<Question id="referralCode">
+  <Title>Referral code</Title>
+  <TextInput maxLength={12} placeholder="ABC123" />
+</Question>
+```
+
+**`maxLength` is a UI cap, NOT a validator.** It only constrains what
+a user can type into that specific input. A direct tRPC call, paste
+from the clipboard on some browsers, or a programmatic value set could
+still land a longer string on the server. If the cap is a real
+business rule (DB column width, downstream API limit, etc.), pair
+`maxLength` with a matching `validate` on the **shared step** so the
+server enforces it too:
+
+```ts
+// apps/server/forms/candidate-form-schema.ts
+{
+  taylordbFieldName: "bio",
+  questionType: "long_text",
+  validate: (value) => {
+    if (typeof value !== "string") throw new Error("Enter some text.");
+    if (value.length > 500) throw new Error("Keep it under 500 characters.");
+  },
+},
+```
+
+Rule of thumb: `maxLength` on the input for UX (block typing + show
+counter), `validate` on the shared step for truth (runs on both client
+and server — see "Validate a question" above).
+
 ### Change the brand colour
 
 Edit `purpleTheme` in `CandidateFormPage.tsx`. Available tokens are in
