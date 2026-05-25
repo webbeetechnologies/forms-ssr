@@ -297,6 +297,51 @@ When you add a step, also add its key to `CandidateAnswers` — otherwise
 `text`/`email`/`phone_number`/`dropdown` → `string`,
 `file_upload` → `FileAnswer[]`, `yes_no` → `boolean`, etc.
 
+### Validate a question
+
+Put `validate` on the **shared step only** (same rule as `showWhen`).
+The same normalized schema runs on **both sides of the wire**:
+
+1. **Client** — before the autosave adapter sends an answer for a
+   step, `@taylordb/forms-ui` runs the step's `validate`. A thrown
+   error blocks the save and surfaces inline next to the question.
+2. **Server** — `@taylordb/forms-api` re-runs the exact same
+   `validate` inside `saveAnswer` / `submitForm` before any write
+   reaches TaylorDB. A thrown error rejects the tRPC call.
+
+Treat `validate` as a pure function of `(value, answers)`: never read
+DOM state, `window`, cookies, or anything else that doesn't exist on
+the server.
+
+**Every question type ships with a built-in default `validate`** that
+`defineForm` attaches automatically based on `questionType`
+(e.g. `email` must look like an email, `number` must be finite,
+`phone_number` must be non-empty, `multiple_choice` must be a
+`string[]`, `file_upload` must be a `FileAnswer[]`, …). You only need
+to write `validate` yourself when you want **custom rules** — and
+doing so **replaces** the default for that step, it does not extend
+it. If you still want the default's behaviour, re-implement it inside
+your override. Full list of defaults:
+`apps/client/node_modules/@taylordb/forms-core/docs/api.md`.
+
+```ts
+{
+  taylordbFieldName: "yearsOfExperience",
+  questionType: "number",
+  // Replaces the default "must be a finite number" check with a
+  // stricter range. Runs once on the client (pre-save) and once on
+  // the server (pre-write to TaylorDB).
+  validate: (value) => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new Error("Enter a number.");
+    }
+    if (value < 0 || value > 60) {
+      throw new Error("Must be between 0 and 60 years.");
+    }
+  },
+},
+```
+
 ### Change the brand colour
 
 Edit `purpleTheme` in `CandidateFormPage.tsx`. Available tokens are in
