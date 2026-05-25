@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createFormsActions, FormsError } from "@taylordb/forms-api";
+import { FormsError } from "@taylordb/forms-api";
 import { TRPCError } from "@trpc/server";
 import { router, publicProcedure } from "../trpc";
 import type { Context } from "../trpc";
@@ -14,22 +14,34 @@ import { candidateForm } from "../forms/candidate-form-schema";
  * driven by the runtime `taylorSchema`. This file is just the tRPC
  * plumbing on top.
  *
- * `candidateForm.adapter(ctx => ctx.queryBuilder)` generates:
+ * We use `candidateForm.createActions(...)` (added in
+ * `@taylordb/forms-taylordb` 0.1.9). It wires `adapter()` and
+ * `createFormsActions` together AND exposes a built-in `uploadFile`
+ * action — the TaylorDB attachment upload pipeline previously hand-rolled
+ * in `upload.ts`. The same `candidateFormActions` is re-exported so the
+ * upload router can call `candidateFormActions.uploadFile(ctx, …)`.
  *
- *   • `session.createSession`   — inserts an empty `candidates` row,
- *                                 returns its `id`.
- *   • `session.loadSession`     — selects the row, rehydrates attachment
- *                                 columns, returns answers keyed by step
- *                                 id. Returns `null` for already-submitted
- *                                 rows (no resume of completed sessions).
- *   • `session.markCompleted`   — flips `submitted = true`.
- *   • `resolvers[stepId].save`  — one `update().set({col: value})` per
- *                                 simple step, with select-cardinality
- *                                 normalization baked in. Attachment
- *                                 columns auto-default to `'noop'`.
+ * What `createActions` gives us:
  *
- * Adding a new question? You only touch `candidate-form-schema.ts` and
- * `CandidateFormBody.tsx` — there is nothing for this file to learn.
+ *   • `createSession`   — inserts an empty row in `taylordb.table` and
+ *                          returns its id.
+ *   • `loadSession`     — selects the row, rehydrates attachment columns
+ *                          into `FileAnswer[]`, returns answers keyed by
+ *                          step id. Returns `null` for already-submitted
+ *                          rows.
+ *   • `saveAnswer`      — runs per-save `sharedSteps[].validate` and writes
+ *                          one column per simple step (or a multi-column
+ *                          atomic update for composite steps).
+ *   • `submitForm`      — drains pending saves, flips `submitted = true`,
+ *                          and renders + sends the email summary.
+ *   • `uploadFile`      — used from `upload.ts`. Verifies the step targets
+ *                          an `attachment` column, calls
+ *                          `qb.uploadAttachments(...)`, replaces the
+ *                          column value, and returns `{ url, name, type,
+ *                          size }`.
+ *
+ * Adding a new question only touches `candidate-form-schema.ts` and
+ * `CandidateFormBody.tsx`. There is nothing for this file to learn.
  *
  * ─── Docs ────────────────────────────────────────────────────────────────
  *   apps/server/node_modules/@taylordb/forms-taylordb/docs/api.md
@@ -37,14 +49,8 @@ import { candidateForm } from "../forms/candidate-form-schema";
  *   apps/server/node_modules/@taylordb/forms-api/docs/api.md
  */
 
-const { resolvers, session } = candidateForm.adapter<Context>(
-  (ctx) => ctx.queryBuilder,
-);
-
-const actions = createFormsActions({
-  sharedSteps: candidateForm.sharedSteps,
-  resolvers,
-  session,
+export const candidateFormActions = candidateForm.createActions<Context>({
+  ctxToQB: (ctx) => ctx.queryBuilder,
   emailConfig: {
     // forms-api compiles a self-contained HTML email summary on submit and
     // hands it to `send`. This template just logs it; wire up your real
@@ -67,7 +73,7 @@ const actions = createFormsActions({
  *
  * See `@taylordb/forms-taylordb/docs/errors.md` for the full taxonomy.
  */
-function toTrpcError(err: unknown): never {
+export function toTrpcError(err: unknown): never {
   if (err instanceof FormsError) {
     const code =
       err.code === "NOT_FOUND"
@@ -86,13 +92,13 @@ function toTrpcError(err: unknown): never {
 
 export const candidateFormRouter = router({
   createSession: publicProcedure.mutation(({ ctx }) =>
-    actions.createSession(ctx).catch(toTrpcError),
+    candidateFormActions.createSession(ctx).catch(toTrpcError),
   ),
 
   loadSession: publicProcedure
     .input(z.object({ sessionId: z.number() }))
     .query(({ ctx, input }) =>
-      actions.loadSession(ctx, input).catch(toTrpcError),
+      candidateFormActions.loadSession(ctx, input).catch(toTrpcError),
     ),
 
   saveAnswer: publicProcedure
@@ -106,7 +112,7 @@ export const candidateFormRouter = router({
       }),
     )
     .mutation(({ ctx, input }) =>
-      actions
+      candidateFormActions
         .saveAnswer(ctx, {
           sessionId: input.sessionId,
           stepId: input.stepId,
@@ -118,6 +124,6 @@ export const candidateFormRouter = router({
   submitForm: publicProcedure
     .input(z.object({ sessionId: z.number() }))
     .mutation(({ ctx, input }) =>
-      actions.submitForm(ctx, input).catch(toTrpcError),
+      candidateFormActions.submitForm(ctx, input).catch(toTrpcError),
     ),
 });

@@ -74,19 +74,41 @@ const autosaveClientPromise = createTrpcAutosaveClient(
 
 // ─── 3. File upload mappers ──────────────────────────────────────────────
 //
-// `<FileUpload>` and `<VideoQuestion>` store `MediaAnswer` objects in the
-// form state — they hold a `Blob` / `File` plus metadata. Before the
-// autosave layer sends the answer to the server it runs the mapper, which
-// uploads the bytes and returns a `FileAnswer[]` with the resulting URL.
+// `<FileUpload>`, `<VideoQuestion>`, and `<AudioQuestion>` store
+// `MediaAnswer` objects in the form state — they hold a `Blob` / `File`
+// plus metadata. Before the autosave layer sends the answer to the
+// server it runs the mapper, which uploads the bytes and swaps in a
+// `FileAnswer[]` URL.
 //
-// We post the file via the dedicated `upload.uploadCandidateFile`
-// mutation, which:
-//   • runs `qb.uploadAttachments` to push bytes to TaylorDB media storage,
-//   • writes the resulting Attachment to the candidate row's column,
-//   • returns `{ url, name, type, size }` (URL prefixed with the media host).
+// Since `@taylordb/forms-taylordb` 0.1.9 you pass a single `uploadFile`
+// to `form.mappers({}, { uploadFile })` and it auto-wires `toApiValue`
+// for EVERY `file_upload` / `multi_format` step — no per-step
+// `createFileUploadMapper` boilerplate. Adding another file question
+// only requires adding the shared step + matching `attachment` column;
+// the mapper below is unchanged.
+//
+// `uploadFile` posts the file via the dedicated
+// `upload.uploadCandidateFile` mutation, which calls
+// `candidateFormActions.uploadFile(ctx, …)` on the server — that runs
+// `qb.uploadAttachments`, writes the resulting Attachment to the row's
+// column, and returns `{ url, name, type, size }`.
 //
 // The `sessionId` is read from the resolved autosave client.
-const mappers = candidateForm.mappers({});
+async function buildMappers() {
+  const client = await autosaveClientPromise;
+  return candidateForm.mappers(
+    {},
+    {
+      uploadFile: async ({ stepId, file, name }) => {
+        const body = new FormData();
+        body.set("file", file, name);
+        body.set("sessionId", String(client.sessionId));
+        body.set("stepId", stepId);
+        return trpcVanilla.upload.uploadCandidateFile.mutate(body);
+      },
+    },
+  );
+}
 
 // ─── 4. Bootstrap provider ───────────────────────────────────────────────
 //
@@ -110,6 +132,9 @@ function CandidateAutosaveProvider({ children }: { children: React.ReactNode }) 
     async function init() {
       try {
         const client = await autosaveClientPromise;
+        if (cancelled) return;
+
+        const mappers = await buildMappers();
         if (cancelled) return;
 
         const adapter = createAutosaveAdapter({

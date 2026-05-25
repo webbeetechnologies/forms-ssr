@@ -20,7 +20,10 @@ import { taylorSchema } from "../taylordb/types";
  * whenever you add a step, otherwise `showWhen` / `validate` on the new
  * step will see `unknown` for its dependencies.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type CandidateAnswers = {
+  // Add a key per shared step's `taylordbFieldName` as you add steps.
+  // See the doc block above for value types per `questionType`.
 };
 
 /**
@@ -84,15 +87,22 @@ type CandidateAnswers = {
  *
  * ─── Server persistence: no resolver boilerplate ──────────────────────────
  *
- * The router calls `candidateForm.adapter(ctx => ctx.queryBuilder)` and
- * gets back `{ resolvers, session }` already wired to the `candidates`
- * table. Every step's `save` is auto-generated — no manual
+ * The router calls `candidateForm.createActions({ ctxToQB, emailConfig })`
+ * and gets back a `FormsActionsType` already wired to the form's table
+ * (`createSession` / `loadSession` / `saveAnswer` / `submitForm`). Every
+ * step's `save` is auto-generated — no manual
  * `update().set().where().execute()` per field.
  *
- * Attachment columns (`resume`, `videoIntro`) are special-cased by the
+ * `createActions` ALSO exposes `actions.uploadFile(ctx, { sessionId,
+ * stepId, file, name })`, which the `upload.uploadCandidateFile`
+ * procedure delegates to. It verifies the step targets an `attachment`
+ * column, calls `qb.uploadAttachments(...)`, and atomically swaps the
+ * column's value — no hand-written attachment plumbing needed.
+ *
+ * Attachment columns (`resume`, `videoIntro`, …) are special-cased by the
  * adapter:
- *   - `save` is auto-`'noop'` — bytes go through the dedicated upload
- *     endpoint, which writes the attachment column directly.
+ *   - `save` is auto-`'noop'` — bytes go through `actions.uploadFile`,
+ *     which writes the attachment column directly.
  *   - `load` rehydrates the stored `string[]` paths into `FileAnswer[]`
  *     with the media host prefixed (see `taylordb.mediaHost`).
  *

@@ -61,6 +61,8 @@ app/
 │
 ├── AGENTS.md                                  # Instructions for AI coding agents
 ├── README.md                                  # ← you are here
+├── examples/
+│   └── candidate-application-form.md          # Full worked example (text, dropdown, file, video)
 ├── taylordb.yml                               # TaylorDB deploy config
 └── pnpm-workspace.yaml
 ```
@@ -70,35 +72,43 @@ app/
 ## Architecture in 30 seconds
 
 ```
-                               ┌────────────────────────┐
-   ┌──────────────────┐ tRPC   │  apps/server/routers/  │
-   │ CandidateFormPage├───────►│  candidateForm.ts      │
-   │  (forms-ui)      │        │  ─ createSession       │
-   │                  │        │  ─ loadSession         │
-   │                  │        │  ─ saveAnswer          │
-   │                  │        │  ─ submitForm          │
-   │                  │        │   ▲                    │
-   │                  │ tRPC   │   │ resolvers          │
-   │                  ├───────►│   ▼                    │
-   │                  │ upload │  candidates row        │ ──► TaylorDB
-   └──────────────────┘        └────────────────────────┘
-            ▲                            ▲
-            │ same source                │
-            │                            │
-            └─────── forms/candidate-form-schema.ts (shared)
+                               ┌──────────────────────────────────┐
+   ┌──────────────────┐ tRPC   │  apps/server/routers/            │
+   │ CandidateFormPage├───────►│  candidateForm.ts                │
+   │  (forms-ui)      │        │   candidateForm.createActions(): │
+   │                  │        │     createSession                │
+   │                  │        │     loadSession                  │
+   │                  │        │     saveAnswer                   │
+   │                  │        │     submitForm                   │
+   │                  │ upload │     uploadFile ◄───┐             │
+   │                  ├───────►│  candidates row    │ ──► TaylorDB│
+   └──────────────────┘        └────────────────────┼─────────────┘
+            ▲                            ▲          │
+            │ same source                │   ┌──────┴───────────┐
+            │                            │   │ upload.ts        │
+            └─── forms/candidate-form-schema.ts │ (FormData →   │
+                                                │  actions.upload│
+                                                │  File)         │
+                                                └────────────────┘
 ```
 
 * **Schema is shared.** `forms/candidate-form-schema.ts` defines every step
-  (`id` + `type` + `validate`) once. The client uses it for in-browser
-  validation and autosave bootstrap; the server uses it for typed save
-  resolvers and re-validation.
+  (`taylordbFieldName` + `questionType` + optional `validate`) once. The
+  client uses it for in-browser validation and autosave bootstrap; the
+  server uses it for typed save resolvers and re-validation.
 * **One row = one session.** `createSession` inserts an empty row in
   `candidates`. Each `saveAnswer` updates one column on that row.
   `submitForm` flips `submitted = true`.
-* **Files bypass autosave.** `<FileUpload>` / `<VideoQuestion>` send bytes
-  through a separate `upload.uploadCandidateFile` mutation that writes
-  directly into the row's attachment column. The autosave value for those
-  steps is just `FileAnswer[]` metadata.
+* **Files go through `actions.uploadFile`.** `<FileUpload>` /
+  `<VideoQuestion>` send bytes through `upload.uploadCandidateFile`,
+  which delegates to `candidateFormActions.uploadFile(ctx, …)` —
+  built into `@taylordb/forms-taylordb` since 0.1.9. It writes
+  attachments directly into the row's column. The autosave value for
+  those steps is just `FileAnswer[]` metadata.
+* **One client uploader handles every file question.**
+  `candidateForm.mappers({}, { uploadFile })` auto-wires every
+  `file_upload` / `multi_format` step. Adding another file question
+  doesn't touch `upload.ts` or the client mapper.
 
 ---
 
@@ -135,24 +145,30 @@ in `taylordb.yml`).
 
 ### Add or change a question
 
-Open these three files in order:
+Open these two files in order:
 
 1. **`apps/server/forms/candidate-form-schema.ts`** — add a step with a
-   stable `id`, a handler `type` (`text`, `email`, `phone_number`,
-   `file_upload`, `multiple_choice`, `rating`, `yes_no`, …), and an
-   optional `validate(value)`.
+   stable `taylordbFieldName`, a `questionType` (`text`, `email`,
+   `phone_number`, `file_upload`, `multiple_choice`, `rating`,
+   `yes_no`, …), and an optional `validate(value)`.
 2. **`apps/client/src/pages/CandidateFormBody.tsx`** — add a `<Question
-   id="…">` whose `id` matches the schema. Pick the right input from
-   `@taylordb/forms-ui` (see the inputs reference linked below). The
-   body lives in its own file so the build-time form-config check
-   plugin can re-render it in jsdom and fail the build on schema/JSX
-   drift.
-3. **`apps/server/routers/candidateForm.ts`** — add a `save` resolver
-   that writes the value to the database.
+   id="…">` whose `id` matches the schema's `taylordbFieldName`. Pick
+   the right input from `@taylordb/forms-ui` (see the inputs reference
+   linked below). The body lives in its own file so the build-time
+   form-config check plugin can re-render it in jsdom and fail the
+   build on schema/JSX drift.
 
-If the value needs a new column, run a TaylorDB schema mutation to add it
-to the `candidates` table. The `apps/server/taylordb/types.ts` file is
-regenerated automatically.
+If the value needs a new column, run a TaylorDB schema mutation to add
+it to the `candidates` table. The `apps/server/taylordb/types.ts` file
+is regenerated automatically.
+
+You do NOT need to touch `candidateForm.ts` —
+`candidateForm.createActions(...)` generates the `saveAnswer` and
+`loadSession` plumbing from the shared schema.
+
+See [`examples/candidate-application-form.md`](./examples/candidate-application-form.md)
+for a complete worked example with name, email, phone, dropdown,
+multi-choice, resume PDF, and 2-minute video intro.
 
 ### Restyle
 
@@ -182,12 +198,16 @@ self-contained and ready to send.
 
 ### Add another file question
 
-1. Add a `file_upload` step to the schema.
+1. Add a `file_upload` (or `multi_format` for audio/video) step to the
+   schema.
 2. Add the column to the `candidates` table (attachment type).
-3. Extend the `column` discriminator in
-   `apps/server/routers/upload.ts`.
-4. Add a `<FileUpload>` / `<VideoQuestion>` / `<AudioQuestion>` and a
-   matching mapper entry in `CandidateFormPage.tsx`.
+3. Add a `<FileUpload>` / `<VideoQuestion>` / `<AudioQuestion>` to
+   `CandidateFormBody.tsx`.
+
+That's the whole list. `upload.ts` already forwards the `stepId` to
+`candidateFormActions.uploadFile`, and the page's
+`form.mappers({}, { uploadFile })` already auto-wires every attachment
+step. No per-step mapper, no per-column discriminator.
 
 ---
 
