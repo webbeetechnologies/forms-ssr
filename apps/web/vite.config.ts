@@ -45,9 +45,9 @@ export default defineConfig({
   },
   plugins: [
     devtools(),
-    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
     tanstackStart({}),
     viteReact(),
+    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
     formsFormCheckPlugin({ entry: "src/form-check.tsx" }),
     {
       name: "sse-plugin",
