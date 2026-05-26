@@ -29,14 +29,20 @@ questions.
 
 ---
 
-## 1. Schema (`apps/server/forms/candidate-form-schema.ts`)
+## 1. Schema (`apps/web/src/server/form-schema.ts`)
 
 The shared source of truth — imported by both the client and the server.
 
 ```ts
 import { defineTaylorForm } from "@taylordb/forms-taylordb";
 import type { FileAnswer } from "@taylordb/forms-core";
-import { taylorSchema } from "../taylordb/types";
+
+import {
+  FORM_COMPLETED_COLUMN,
+  FORM_TABLE,
+} from "@/shared/form.constants";
+
+import { taylorSchema } from "./taylordb/types";
 
 /**
  * In-progress answers map. One optional key per shared step's
@@ -51,7 +57,7 @@ import { taylorSchema } from "../taylordb/types";
  *   date                                   → string (ISO)
  *   file_upload                            → FileAnswer[]
  */
-type CandidateAnswers = {
+type FormAnswers = {
   fullName?: string;
   email?: string;
   phone?: string;
@@ -66,8 +72,8 @@ type CandidateAnswers = {
   backgroundCheckConsent?: boolean;
 };
 
-export const candidateForm = defineTaylorForm(taylorSchema)
-  .withAnswers<CandidateAnswers>()({
+export const form = defineTaylorForm(taylorSchema)
+  .withAnswers<FormAnswers>()({
   sharedSteps: [
     { taylordbFieldName: "fullName",        questionType: "text" },
     { taylordbFieldName: "email",           questionType: "email" },
@@ -87,8 +93,8 @@ export const candidateForm = defineTaylorForm(taylorSchema)
     { taylordbFieldName: "willingToRelocate", questionType: "yes_no" },
 
     // Conditional — only show the background-check consent if the
-    // candidate gave consent to be contacted. (Toy example; real
-    // forms use this for branch logic.)
+    // applicant said they'd relocate. (Toy example; real forms use
+    // this for branch logic.)
     {
       taylordbFieldName: "backgroundCheckConsent",
       questionType: "legal",
@@ -96,16 +102,17 @@ export const candidateForm = defineTaylorForm(taylorSchema)
     },
   ] as const,
   taylordb: {
-    table: "candidates",
-    completedColumn: "submitted",
-    initialValues: { submitted: false },
+    table: FORM_TABLE,
+    completedColumn: FORM_COMPLETED_COLUMN,
+    initialValues: { [FORM_COMPLETED_COLUMN]: false },
   },
 });
 ```
 
 ### Required TaylorDB schema
 
-Run a `schema-mutation` so the `candidates` table has these columns:
+Run a `schema-mutation` so the `submissions` table (see `FORM_TABLE` in
+`apps/web/src/shared/form.constants.ts`) has these columns:
 
 | Column                   | Type                       |
 | ------------------------ | -------------------------- |
@@ -126,117 +133,111 @@ Run a `schema-mutation` so the `candidates` table has these columns:
 
 ---
 
-## 2. Server router (`apps/server/routers/candidateForm.ts`)
+## 2. Server actions + functions (`form-actions.ts`, `form-session.ts`, `form.functions.ts`)
 
-`candidateForm.createActions(...)` does ALL the work — including
-`uploadFile`. The router below is the entire server-side surface for
-both autosave and file uploads.
+`form.createActions(...)` does ALL the work — including `uploadFile`.
+TanStack Start exposes SSR session bootstrap via `createServerFn`; autosave
+mutations go through `/api/forms/$action`.
 
 ```ts
-import { z } from "zod";
+// apps/web/src/server/form-actions.ts
 import { FormsError } from "@taylordb/forms-api";
-import { TRPCError } from "@trpc/server";
-import { router, publicProcedure } from "../trpc";
-import type { Context } from "../trpc";
-import { candidateForm } from "../forms/candidate-form-schema";
 
-export const candidateFormActions = candidateForm.createActions<Context>({
+import { form } from "./form-schema";
+import { getTaylorDB } from "./taylordb";
+
+export type FormServerContext = {
+  queryBuilder: ReturnType<typeof getTaylorDB>;
+};
+
+export function createFormContext(): FormServerContext {
+  return { queryBuilder: getTaylorDB() };
+}
+
+export const formActions = form.createActions<FormServerContext>({
   ctxToQB: (ctx) => ctx.queryBuilder,
   emailConfig: {
-    send: async ({ html, to }) => {
-      // Wire up your mailer of choice here (Resend, SES, SendGrid, …).
-      console.log("[candidate submission]", to, html);
+    send: async ({ html }) => {
+      console.log("[form submission]", html);
     },
   },
 });
 
-export function toTrpcError(err: unknown): never {
-  if (err instanceof FormsError) {
-    const code =
-      err.code === "NOT_FOUND" ? "NOT_FOUND" :
-      err.code === "BAD_REQUEST" ? "BAD_REQUEST" :
-      "INTERNAL_SERVER_ERROR";
-    throw new TRPCError({
-      code,
-      message: err.message,
-      cause: { stepId: err.stepId, fieldName: err.fieldName },
-    });
-  }
+export function toClientError(err: unknown): never {
+  if (err instanceof FormsError) throw new Error(err.message);
   throw err;
 }
-
-export const candidateFormRouter = router({
-  createSession: publicProcedure.mutation(({ ctx }) =>
-    candidateFormActions.createSession(ctx).catch(toTrpcError),
-  ),
-  loadSession: publicProcedure
-    .input(z.object({ sessionId: z.number() }))
-    .query(({ ctx, input }) =>
-      candidateFormActions.loadSession(ctx, input).catch(toTrpcError),
-    ),
-  saveAnswer: publicProcedure
-    .input(z.object({
-      sessionId: z.number(),
-      stepId: z.string(),
-      value: z.unknown().optional(),
-    }))
-    .mutation(({ ctx, input }) =>
-      candidateFormActions.saveAnswer(ctx, input).catch(toTrpcError),
-    ),
-  submitForm: publicProcedure
-    .input(z.object({ sessionId: z.number() }))
-    .mutation(({ ctx, input }) =>
-      candidateFormActions.submitForm(ctx, input).catch(toTrpcError),
-    ),
-});
 ```
+
+```ts
+// apps/web/src/server/form.functions.ts
+import { createServerFn } from "@tanstack/react-start";
+import type { SerializableFormSession } from "@taylordb/forms-ui";
+
+import { toClientError } from "./form-actions";
+import { bootstrapFormSession } from "./form-session";
+
+export const getFormSession = createServerFn({ method: "GET" }).handler(
+  async (): Promise<SerializableFormSession> => {
+    try {
+      return await bootstrapFormSession();
+    } catch (err) {
+      toClientError(err);
+    }
+  },
+);
+```
+
+Autosave (`create-session`, `load-session`, `save-answer`, `submit-form`) is
+handled by `apps/web/src/server/forms-api-handlers.ts` at
+`/api/forms/$action` — you do not add a server function per action.
 
 ---
 
-## 3. Upload router (`apps/server/routers/upload.ts`)
+## 3. Upload server route (`apps/web/src/routes/api/upload-form-file.ts`)
 
-One generic file-ingestion procedure that handles `resume` AND
+One generic file-ingestion endpoint that handles `resume` AND
 `videoIntro` (and any future `attachment` step) — no per-column
 discriminator, no `qb.uploadAttachments` boilerplate.
 
 ```ts
-import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { router, publicProcedure } from "../trpc";
-import { candidateFormActions, toTrpcError } from "./candidateForm";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  createFormContext,
+  formActions,
+  toClientError,
+} from "@/server/form-actions";
 
-export const uploadRouter = router({
-  uploadCandidateFile: publicProcedure
-    .input(z.instanceof(FormData))
-    .mutation(async ({ input, ctx }) => {
-      const file = input.get("file") as File | null;
-      const sessionIdRaw = input.get("sessionId") as string | null;
-      const stepId = input.get("stepId") as string | null;
-
-      if (!file || file.size === 0) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Missing file" });
-      }
-      if (!sessionIdRaw) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Missing sessionId" });
-      }
-      const sessionId = Number(sessionIdRaw);
-      if (!Number.isFinite(sessionId)) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid sessionId" });
-      }
-      if (!stepId) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Missing stepId" });
-      }
-
-      return candidateFormActions
-        .uploadFile(ctx, { sessionId, stepId, file, name: file.name })
-        .catch(toTrpcError);
-    }),
+export const Route = createFileRoute("/api/upload-form-file")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const input = await request.formData();
+        const file = input.get("file");
+        const sessionIdRaw = input.get("sessionId");
+        const stepId = input.get("stepId");
+        // …validate file, sessionId, stepId…
+        try {
+          const ctx = createFormContext();
+          const result = await formActions.uploadFile(ctx, {
+            sessionId: Number(sessionIdRaw),
+            stepId: String(stepId),
+            file: file as File,
+            name: (file as File).name,
+          });
+          return Response.json(result);
+        } catch (err) {
+          toClientError(err);
+        }
+      },
+    },
+  },
 });
 ```
 
 ---
 
-## 4. Client form body (`apps/client/src/pages/CandidateFormBody.tsx`)
+## 4. Client form body (`apps/web/src/pages/landing/FormBody.tsx`)
 
 The JSX step tree, in the SAME order as `sharedSteps`. Each `<Question
 id="…">` `id` matches the schema's `taylordbFieldName`. The
@@ -264,7 +265,7 @@ import {
   DateInput,
 } from "@taylordb/forms-ui";
 
-export function CandidateFormBody() {
+export function FormBody() {
   return (
     <>
       <WelcomeScreen id="welcome" buttonText="Start application">
@@ -383,136 +384,112 @@ export function CandidateFormBody() {
 
 ---
 
-## 5. Client page (`apps/client/src/pages/CandidateFormPage.tsx`)
+## 5. Client page (`apps/web/src/pages/landing/FormPage.tsx`)
 
-The page wires up the autosave provider and the **single shared
-`uploadFile`** that handles every file question. Note that the mapper
-boilerplate is gone — you don't reference `resume` or `videoIntro` by
-name anywhere on the client side.
+The page wires up SSR autosave and delegates file uploads to
+`createFormMappers` in `form-mappers.ts`.
 
 ```tsx
-import { useEffect, useState } from "react";
+// apps/web/src/pages/landing/FormPage.tsx (excerpt)
+import { useMemo } from "react";
 import {
   Form,
-  createTrpcAutosaveClient,
-  lightTheme,
-  createAutosaveAdapter,
   FormAdapterProvider,
-  type AutosaveAdapter,
-  type FormAnswers,
-  type FormTheme,
+  createSsrFetchAutosaveClient,
+  useFormSession,
+  type SerializableFormSession,
 } from "@taylordb/forms-ui";
-import { candidateForm } from "@repo/server/forms/candidate-form-schema";
-import { trpcVanilla } from "../lib/trpc-vanilla";
-import { CandidateFormBody } from "./CandidateFormBody";
 
-const purpleTheme: FormTheme = {
-  ...lightTheme,
-  accent: "#8b5cf6",
-  surface: "rgba(139, 92, 246, 0.08)",
-};
+import { FormBody } from "@/pages/landing/FormBody";
+import { createFormMappers } from "@/pages/landing/form-mappers";
+import { purpleTheme } from "@/pages/landing/form-theme";
+import { FORM_ID } from "@/shared/form.constants";
+import { form } from "@/server/form-schema";
 
-const autosaveClientPromise = createTrpcAutosaveClient(
-  trpcVanilla.candidateForm,
-  { formId: "candidate" },
-);
-
-// ─── Single uploader handles ALL file questions ──────────────────────────
-// `form.mappers({}, { uploadFile })` auto-wires `toApiValue` for every
-// `file_upload` / `multi_format` step — no per-step mappers, no per-step
-// upload functions. Adding a new file question just means a new step in
-// the schema + a new column in TaylorDB.
-async function buildMappers() {
-  const client = await autosaveClientPromise;
-  return candidateForm.mappers(
-    {},
-    {
-      uploadFile: async ({ stepId, file, name }) => {
-        const body = new FormData();
-        body.set("file", file, name);
-        body.set("sessionId", String(client.sessionId));
-        body.set("stepId", stepId);
-        return trpcVanilla.upload.uploadCandidateFile.mutate(body);
-      },
-    },
+export default function FormPage({ initialSession }: { initialSession: SerializableFormSession }) {
+  const client = useMemo(
+    () =>
+      createSsrFetchAutosaveClient({
+        formId: FORM_ID,
+        apiUrl: "/api/forms",
+        sessionId: initialSession.sessionId,
+      }),
+    [initialSession.sessionId],
   );
-}
 
-function CandidateAutosaveProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<
-    | { status: "loading"; adapter: null; defaultValues: null }
-    | { status: "ready"; adapter: AutosaveAdapter; defaultValues: FormAnswers }
-    | { status: "error"; error: Error }
-  >({ status: "loading", adapter: null, defaultValues: null });
+  const mappers = useMemo(
+    () =>
+      createFormMappers({
+        credentials: "include",
+        getSessionId: () => client.sessionId,
+      }),
+    [client],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const client = await autosaveClientPromise;
-        if (cancelled) return;
-        const mappers = await buildMappers();
-        if (cancelled) return;
-        const adapter = createAutosaveAdapter({
-          sharedSteps: candidateForm.sharedSteps,
-          client,
-          mappers,
-        });
-        const defaultValues = await adapter.loadSession();
-        if (cancelled) return;
-        setState({ status: "ready", adapter, defaultValues });
-      } catch (err) {
-        if (cancelled) return;
-        setState({
-          status: "error",
-          error: err instanceof Error ? err : new Error(String(err)),
-        });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const session = useFormSession({
+    client,
+    sharedSteps: form.sharedSteps,
+    mappers,
+    initialSession,
+  });
 
-  if (state.status === "error") return <div>Could not start: {state.error.message}</div>;
-  if (state.status === "loading") return <div>Starting session…</div>;
+  if (!session.ready) return null;
 
   return (
     <FormAdapterProvider
-      adapter={state.adapter}
-      defaultValues={state.defaultValues}
-      sharedSteps={candidateForm.sharedSteps}
+      adapter={session.adapter}
+      defaultValues={session.defaultValues}
+      sharedSteps={form.sharedSteps}
     >
-      {children}
-    </FormAdapterProvider>
-  );
-}
-
-export default function CandidateFormPage() {
-  return (
-    <CandidateAutosaveProvider>
       <Form keyboard theme={purpleTheme}>
-        <CandidateFormBody />
+        <FormBody />
       </Form>
-    </CandidateAutosaveProvider>
+    </FormAdapterProvider>
   );
 }
 ```
 
+```ts
+// apps/web/src/pages/landing/form-mappers.ts (excerpt)
+export function createFormMappers({ getSessionId, apiOrigin, credentials }) {
+  return form.mappers({}, {
+    uploadFile: async ({ stepId, file, name }) => {
+      const body = new FormData();
+      body.set("file", file, name);
+      body.set("sessionId", String(getSessionId()));
+      body.set("stepId", stepId);
+      const response = await fetch("/api/upload-form-file", {
+        method: "POST",
+        body,
+        credentials,
+      });
+      if (!response.ok) throw new Error("File upload failed");
+      return response.json();
+    },
+  });
+}
+```
+
+The route loader (`apps/web/src/routes/index.tsx`) calls `getFormSession()`
+to hydrate the first paint with cookie-backed session data.
+
 ---
 
-## 6. Build-time check (`apps/client/src/candidate-form-check.tsx`)
+## 6. Build-time check (`apps/web/src/form-check.tsx`)
 
 This file does NOT change when you add steps — it always renders the
 same body inside a non-autosave `<Form sharedSteps={…}>`.
 
 ```tsx
 import { Form } from "@taylordb/forms-ui";
-import { candidateForm } from "@repo/server/forms/candidate-form-schema";
-import { CandidateFormBody } from "./pages/CandidateFormBody";
+import { FormBody } from "@/pages/landing/FormBody";
+import { purpleTheme } from "@/pages/landing/form-theme";
+import { form } from "@/server/form-schema";
 
-export default function CandidateFormCheck() {
+export default function FormCheck() {
   return (
-    <Form sharedSteps={candidateForm.sharedSteps}>
-      <CandidateFormBody />
+    <Form sharedSteps={form.sharedSteps} theme={purpleTheme}>
+      <FormBody />
     </Form>
   );
 }
@@ -524,25 +501,26 @@ export default function CandidateFormCheck() {
 
 | Old pattern                                         | New pattern                                                      |
 | --------------------------------------------------- | ---------------------------------------------------------------- |
-| `qb.uploadAttachments` + column discriminator in `upload.ts` | `candidateFormActions.uploadFile(ctx, { sessionId, stepId, file, name })` |
-| `column: "resume" | "videoIntro"` discriminator     | Just send the `stepId` — schema knows which column it maps to    |
+| `qb.uploadAttachments` + column discriminator in upload route | `formActions.uploadFile(ctx, { sessionId, stepId, file, name })` |
+| `column: "resume" \| "videoIntro"` discriminator     | Just send the `stepId` — schema knows which column it maps to    |
 | Per-step `createFileUploadMapper` calls             | One `form.mappers({}, { uploadFile })` covers every attachment step |
-| `createFormsActions({ sharedSteps, resolvers, session, emailConfig })` | `candidateForm.createActions({ ctxToQB, emailConfig })`           |
-| `candidateForm.adapter(ctx => ctx.queryBuilder)`     | Implicit — happens inside `createActions`                        |
+| `createFormsActions({ sharedSteps, resolvers, session, emailConfig })` | `form.createActions({ ctxToQB, emailConfig })`           |
+| `form.adapter(ctx => ctx.queryBuilder)`             | Implicit — happens inside `createActions`                        |
+| Per-action tRPC / server functions for autosave     | `/api/forms/$action` + `createSsrFetchAutosaveClient` on the page |
 
 ---
 
 ## Adding ANOTHER file question (e.g. portfolio link PDF)
 
-1. Add a `portfolio: attachment` column to `candidates` via
+1. Add a `portfolio: attachment` column to `submissions` via
    `schema-mutation`.
 2. Add a step to `sharedSteps`:
    ```ts
    { taylordbFieldName: "portfolio", questionType: "file_upload" },
    ```
 3. Add a `<Question id="portfolio">` with `<FileUpload>` to
-   `CandidateFormBody.tsx`.
-4. Add `portfolio?: FileAnswer[]` to the `CandidateAnswers` type.
+   `FormBody.tsx`.
+4. Add `portfolio?: FileAnswer[]` to the `FormAnswers` type.
 
 Done. The upload router doesn't change. The page mappers don't change.
 The server actions don't change. That's the whole point of the new

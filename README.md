@@ -1,11 +1,10 @@
-# TaylorDB Forms Template
+# TaylorDB Forms Template (TanStack Start)
 
-A starter template for building Typeform-style conversational forms backed by TaylorDB.
+A starter template for building Typeform-style conversational forms backed by
+TaylorDB — as a **pnpm monorepo** with a TanStack Start app in `apps/web`.
 
-The template ships with a complete, working **Candidate application form** —
-name, email, phone, resume upload, and a 2-minute video introduction — wired
-up to autosave each answer to a row in the `candidates` table. Use it as a
-reference and adapt it to your own form.
+The template ships with a working application form shell (welcome +
+end screens). Add your own questions to the shared schema and JSX body.
 
 ---
 
@@ -13,224 +12,179 @@ reference and adapt it to your own form.
 
 | Layer | Library | Purpose |
 | --- | --- | --- |
-| Form runtime (UI) | [`@taylordb/forms-ui`][forms-ui] | React components — `<Form>`, `<Question>`, inputs, autosave provider |
-| Form schema + handlers | [`@taylordb/forms-core`][forms-core] | Pure validation + email rendering, shared between client & server |
-| Form HTTP/tRPC layer | [`@taylordb/forms-api`][forms-api] | `createSession` / `loadSession` / `saveAnswer` / `submitForm` actions |
+| Form runtime (UI) | [`@taylordb/forms-ui`][forms-ui] | React components — `<Form>`, `<Question>`, inputs, autosave |
+| Form schema + handlers | [`@taylordb/forms-core`][forms-core] | Pure validation + email rendering |
+| Form actions | [`@taylordb/forms-api`][forms-api] + [`@taylordb/forms-taylordb`][forms-taylordb] | Session lifecycle + TaylorDB persistence |
 | Database | [`@taylordb/query-builder`][qb] | Typed reads, writes, and `uploadAttachments` |
-| Transport | [tRPC v11](https://trpc.io) | Type-safe client ⇆ server |
-| Build | Vite + tsx + esbuild | |
+| App framework | [TanStack Start](https://tanstack.com/start) | File routes, SSR, `createServerFn`, Nitro server |
+| Build | Vite 8 | Includes `formsFormCheckPlugin` guard |
 
-[forms-ui]: ./apps/client/node_modules/@taylordb/forms-ui/llm.txt
-[forms-core]: ./apps/client/node_modules/@taylordb/forms-core/llm.txt
-[forms-api]: ./apps/server/node_modules/@taylordb/forms-api/llm.txt
-[qb]: ./apps/server/node_modules/@taylordb/query-builder/llm.txt
+[forms-ui]: ./apps/web/node_modules/@taylordb/forms-ui/llm.txt
+[forms-core]: ./apps/web/node_modules/@taylordb/forms-core/llm.txt
+[forms-api]: ./apps/web/node_modules/@taylordb/forms-api/docs/api.md
+[forms-taylordb]: ./apps/web/node_modules/@taylordb/forms-taylordb/docs/api.md
+[qb]: ./apps/web/node_modules/@taylordb/query-builder/llm.txt
 
 ---
 
 ## Repo layout
 
 ```
-app/
 ├── apps/
-│   ├── client/                                # React + Vite frontend
-│   │   ├── index.html
-│   │   └── src/
-│   │       ├── main.tsx                       # Entry point — mounts CandidateFormPage
-│   │       ├── index.css                      # Minimal page reset
-│   │       ├── lib/
-│   │       │   ├── trpc.ts                    # React-Query tRPC hooks
-│   │       │   └── trpc-vanilla.ts            # Vanilla proxy (used by forms-ui autosave)
-│   │       ├── pages/
-│   │       │   ├── CandidateFormPage.tsx      # ← THE form (autosave + theme)
-│   │       │   └── CandidateFormBody.tsx      # Shared `<Question>` JSX tree
-│   │       └── candidate-form-check.tsx       # Build-time form-config check entry
-│   │
-│   │   vite.config.ts wires `formsFormCheckPlugin` — DO NOT REMOVE.
-│   │
-│   └── server/                                # Express + tRPC backend
-│       ├── index.ts                           # Express bootstrap
-│       ├── trpc.ts                            # Context (auth + queryBuilder per request)
-│       ├── router.ts                          # Top-level appRouter
-│       ├── forms/
-│       │   └── candidate-form-schema.ts       # ← Shared schema (sharedSteps + validate)
-│       ├── routers/
-│       │   ├── candidateForm.ts               # ← Form actions wired to tRPC
-│       │   └── upload.ts                      # ← File upload endpoint
-│       └── taylordb/
-│           └── types.ts                       # Auto-generated DB schema types
-│
-├── AGENTS.md                                  # Instructions for AI coding agents
-├── README.md                                  # ← you are here
-├── examples/
-│   └── candidate-application-form.md          # Full worked example (text, dropdown, file, video)
-├── taylordb.yml                               # TaylorDB deploy config
-└── pnpm-workspace.yaml
+│   └── web/                        # TanStack Start app (forms UI + server)
+│       ├── src/
+│       │   ├── routes/
+│       │   │   ├── __root.tsx
+│       │   │   ├── index.tsx
+│       │   │   └── api/
+│       │   │       ├── forms/$action.ts
+│       │   │       └── upload-form-file.ts
+│       │   ├── pages/
+│       │   │   └── landing/
+│       │   │       ├── FormPage.tsx
+│       │   │       ├── FormBody.tsx
+│       │   │       ├── form-mappers.ts
+│       │   │       └── form-theme.ts
+│       │   ├── embed/
+│       │   │   ├── form.tsx
+│       │   │   └── session-storage.ts
+│       │   ├── shared/
+│       │   │   └── form.constants.ts
+│       │   ├── server/
+│       │   │   ├── taylordb.ts
+│       │   │   ├── taylordb/types.ts
+│       │   │   ├── form-schema.ts
+│       │   │   ├── form-actions.ts
+│       │   │   ├── form-session.ts
+│       │   │   ├── form.functions.ts
+│       │   │   ├── forms-api-handlers.ts
+│       │   │   └── cors.ts
+│       │   ├── form-check.tsx
+│       │   ├── router.tsx
+│       │   └── styles.css
+│       ├── vite.config.ts
+│       ├── vite.embed.config.ts
+│       └── package.json
+├── taylordb.yml                    # `web` service → apps/web
+├── pnpm-workspace.yaml
+├── AGENTS.md
+└── examples/candidate-application-form.md
 ```
 
 ---
 
-## Architecture in 30 seconds
+## Architecture
 
 ```
-                               ┌──────────────────────────────────┐
-   ┌──────────────────┐ tRPC   │  apps/server/routers/            │
-   │ CandidateFormPage├───────►│  candidateForm.ts                │
-   │  (forms-ui)      │        │   candidateForm.createActions(): │
-   │                  │        │     createSession                │
-   │                  │        │     loadSession                  │
-   │                  │        │     saveAnswer                   │
-   │                  │        │     submitForm                   │
-   │                  │ upload │     uploadFile ◄───┐             │
-   │                  ├───────►│  candidates row    │ ──► TaylorDB│
-   └──────────────────┘        └────────────────────┼─────────────┘
-            ▲                            ▲          │
-            │ same source                │   ┌──────┴───────────┐
-            │                            │   │ upload.ts        │
-            └─── forms/candidate-form-schema.ts │ (FormData →   │
-                                                │  actions.upload│
-                                                │  File)         │
-                                                └────────────────┘
+Browser
+  ↓
+TanStack Start / Nitro (apps/web, port 3000)
+  ↓
+/  → FormPage (forms-ui autosave)
+  ↓
+/api/forms/* and /api/upload-form-file
+  ↓
+formActions (forms-taylordb)
+  ↓
+getTaylorDB() → TaylorDB
+
+File uploads: POST /api/upload-form-file → formActions.uploadFile
+Embed script: /embed/submissions-{uuid}.js + /embed/manifest.json → Shadow DOM → same API routes
 ```
 
-* **Schema is shared.** `forms/candidate-form-schema.ts` defines every step
-  (`taylordbFieldName` + `questionType` + optional `validate`) once. The
-  client uses it for in-browser validation and autosave bootstrap; the
-  server uses it for typed save resolvers and re-validation.
-* **One row = one session.** `createSession` inserts an empty row in
-  `candidates`. Each `saveAnswer` updates one column on that row.
-  `submitForm` flips `submitted = true`.
-* **Files go through `actions.uploadFile`.** `<FileUpload>` /
-  `<VideoQuestion>` send bytes through `upload.uploadCandidateFile`,
-  which delegates to `candidateFormActions.uploadFile(ctx, …)` —
-  built into `@taylordb/forms-taylordb` since 0.1.9. It writes
-  attachments directly into the row's column. The autosave value for
-  those steps is just `FileAnswer[]` metadata.
-* **One client uploader handles every file question.**
-  `candidateForm.mappers({}, { uploadFile })` auto-wires every
-  `file_upload` / `multi_format` step. Adding another file question
-  doesn't touch `upload.ts` or the client mapper.
+* **Schema is shared** in `apps/web/src/server/form-schema.ts`.
+* **Form id / table** come from `apps/web/src/shared/form.constants.ts` (`FORM_ID`, `FORM_TABLE`).
+* **One row = one session** in the `submissions` table.
+* **Autosave** uses `createSsrFetchAutosaveClient` on the first-party page and
+  `createFetchAutosaveClient` in the embed bundle.
 
 ---
 
 ## Run it
 
-Local dev is managed by TaylorDB tooling — you don't run pnpm dev manually.
-The dev process is supervised by `pm2` and you restart it from your AI
-agent or the dashboard.
-
-To verify everything builds:
+Local dev is managed by TaylorDB tooling (`taylordb.yml` → `apps/web` →
+`pnpm dev` on port 3000). To verify locally:
 
 ```bash
 pnpm install
 pnpm build
+pnpm lint
 ```
 
-`pnpm build` also runs the **form-config check** plugin
-(`formsFormCheckPlugin` from `@taylordb/forms-ui`, wired in
-`apps/client/vite.config.ts`). The plugin SSR-loads
-`apps/client/src/candidate-form-check.tsx`, mounts the form in jsdom,
-and fails the build if the JSX step tree drifts from `sharedSteps`
-(wrong order, missing or duplicate step ids, etc.). **Do not remove
-this plugin** — it is our only automatic guard against schema/JSX
-drift. Keep `@taylordb/forms-ui` up to date and keep `jsdom` in
-`apps/client` devDependencies so the check stays accurate. Plugin docs:
-`apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md`.
+`pnpm build` runs the **form-config check** (`formsFormCheckPlugin`). Do not
+remove it.
 
-The candidate form opens at the root URL of the client service (configured
-in `taylordb.yml`).
+Copy `apps/web/.env.example` to `apps/web/.env` and set `TAYLORDB_*` when
+running outside TaylorDB hosting.
 
 ---
 
-## How to customise
+## Embed the form (optional)
 
-### Add or change a question
+The embed bundle is **not** part of the default build. Use it only when you
+want to let customers inline the form on another site.
 
-Open these two files in order:
-
-1. **`apps/server/forms/candidate-form-schema.ts`** — add a step with a
-   stable `taylordbFieldName`, a `questionType` (`text`, `email`,
-   `phone_number`, `file_upload`, `multiple_choice`, `rating`,
-   `yes_no`, …), and an optional `validate(value)`.
-2. **`apps/client/src/pages/CandidateFormBody.tsx`** — add a `<Question
-   id="…">` whose `id` matches the schema's `taylordbFieldName`. Pick
-   the right input from `@taylordb/forms-ui` (see the inputs reference
-   linked below). The body lives in its own file so the build-time
-   form-config check plugin can re-render it in jsdom and fail the
-   build on schema/JSX drift.
-
-If the value needs a new column, run a TaylorDB schema mutation to add
-it to the `candidates` table. The `apps/server/taylordb/types.ts` file
-is regenerated automatically.
-
-You do NOT need to touch `candidateForm.ts` —
-`candidateForm.createActions(...)` generates the `saveAnswer` and
-`loadSession` plumbing from the shared schema.
-
-See [`examples/candidate-application-form.md`](./examples/candidate-application-form.md)
-for a complete worked example with name, email, phone, dropdown,
-multi-choice, resume PDF, and 2-minute video intro.
-
-### Restyle
-
-The form uses `lightTheme` from `@taylordb/forms-ui` with a purple accent
-override. Change it in `CandidateFormPage.tsx`:
-
-```tsx
-const purpleTheme: FormTheme = {
-  ...lightTheme,
-  accent: "#8b5cf6",
-  surface: "rgba(139, 92, 246, 0.08)",
-};
-```
-
-The full token list is in
-`apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md`.
-
-The page background sits in `apps/client/src/index.css` — feel free to
-replace the gradient.
-
-### Wire up real email on submit
-
-`apps/server/routers/candidateForm.ts` currently logs the rendered
-submission HTML. Replace the body of `emailConfig.send` with a call to
-your mailer (Resend, SES, SendGrid, Nodemailer, etc.). The HTML is
-self-contained and ready to send.
-
-### Add another file question
-
-1. Add a `file_upload` (or `multi_format` for audio/video) step to the
-   schema.
-2. Add the column to the `candidates` table (attachment type).
-3. Add a `<FileUpload>` / `<VideoQuestion>` / `<AudioQuestion>` to
-   `CandidateFormBody.tsx`.
-
-That's the whole list. `upload.ts` already forwards the `stepId` to
-`candidateFormActions.uploadFile`, and the page's
-`form.mappers({}, { uploadFile })` already auto-wires every attachment
-step. No per-step mapper, no per-column discriminator.
-
----
-
-## Reference docs (already on disk)
-
-The form libraries ship `llm.txt` + a `docs/` folder inside their packages.
-These are the authoritative references — read them before changing
-behaviour:
-
-| Topic | Path |
+| Script | What it builds |
 | --- | --- |
-| forms-ui overview | `apps/client/node_modules/@taylordb/forms-ui/llm.txt` |
-| forms-ui `<Form>` props + **UI locale** | `apps/client/node_modules/@taylordb/forms-ui/docs/form-api.md` |
-| forms-ui inputs (TextInput, FileUpload, …) | `apps/client/node_modules/@taylordb/forms-ui/docs/inputs.md` |
-| Autosave (fetch + tRPC variants) | `apps/client/node_modules/@taylordb/forms-ui/docs/autosave.md` |
-| Theming, hooks, exports (incl. `useFormLocale`) | `apps/client/node_modules/@taylordb/forms-ui/docs/hooks-theming-exports.md` |
-| Recipes & gotchas | `apps/client/node_modules/@taylordb/forms-ui/docs/recipes-agents.md` |
-| Build-time form-config check (Vite plugin) | `apps/client/node_modules/@taylordb/forms-ui/docs/vite-plugin-form-check.md` |
-| forms-core handlers / `defineForm` | `apps/client/node_modules/@taylordb/forms-core/docs/api.md` |
-| forms-api server actions | `apps/server/node_modules/@taylordb/forms-api/docs/api.md` |
-| Query builder | `apps/server/node_modules/@taylordb/query-builder/llm.txt` |
+| `pnpm build` | TanStack Start app only (includes `formsFormCheckPlugin`) |
+| `pnpm --filter @repo/web build:embed` | Unique `/embed/submissions-{uuid}.js` + `manifest.json` (includes `formsFormCheckPlugin`) |
+| `pnpm --filter @repo/web build:all` | Embed first, then the app (so Nitro serves the embed assets) |
 
-For AI agents working in this repo, see [`AGENTS.md`](./AGENTS.md).
+For production embed hosting, run `build:all` (or `build:embed` before `build`).
+Each embed build generates a new random UUID (RFC 4122 v4 from `crypto.randomUUID()`)
+and writes:
+
+- `apps/web/public/embed/submissions-{uuid}.js` — the embed bundle
+- `apps/web/public/embed/manifest.json` — `{ formId, buildId, fileName, script }` for the current build
+
+After the app build, both files are served under `/embed/`.
+
+Install it on another website with the script URL from the build log or
+`manifest.json`:
+
+```html
+<div data-taylordb-form="submissions"></div>
+<script async src="https://your-forms-domain.example/embed/submissions-{uuid}.js"></script>
+```
+
+Optional attributes:
+
+```html
+<div
+  data-taylordb-form="submissions"
+  data-api-origin="https://your-forms-domain.example"
+></div>
+<script
+  async
+  src="https://your-forms-domain.example/embed/submissions-{uuid}.js"
+  data-api-origin="https://your-forms-domain.example"
+></script>
+```
+
+The embed mounts the same `FormBody` component inside a Shadow DOM,
+injects `@taylordb/forms-ui` styles into that shadow root, and stores the
+session id in the host page's `localStorage` instead of relying on third-party
+cookies.
+
+Cross-origin API access is controlled in
+`apps/web/src/server/cors.ts`. By default `EMBED_ALLOWED_ORIGINS` is `["*"]`,
+so any customer site can embed the form. For production, replace it with
+explicit origins:
+
+```ts
+export const EMBED_ALLOWED_ORIGINS = [
+  "https://customer-site.example",
+  "https://www.customer-site.example",
+] as const;
+```
+
+---
+
+## Customise
+
+See [`AGENTS.md`](./AGENTS.md) and
+[`examples/candidate-application-form.md`](./examples/candidate-application-form.md)
+for adding questions, file uploads, validation, theming, and email-on-submit.
 
 ---
 

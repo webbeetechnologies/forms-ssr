@@ -4,20 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @repo/client build",
-    "build:server": "pnpm --filter @repo/server build",
-    "build:all": "pnpm build && pnpm build:server",
-    "lint": "eslint apps",
+    "build": "pnpm --filter @repo/web build",
+    "lint": "eslint apps/web",
     "generate:schema": "pnpx @taylordb/cli generate-schema"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "typescript": "~5.9.3",
+    "typescript": "^6.0.2",
     "typescript-eslint": "^8.47.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
   }
 }

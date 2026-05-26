@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.output
+apps/web/.output
+apps/web/.tanstack
+apps/web/public/embed/
 server/dist
 *.local
 

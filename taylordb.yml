@@ -10,8 +10,8 @@ runtime:
   packageManager: pnpm
 
 services:
-  server:
-    workDir: apps/server
+  web:
+    workDir: apps/web
     install:
       commands:
         - pnpm install
@@ -22,17 +22,13 @@ services:
         vars:
           TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
           TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
-          FRONTEND_URL: routing.client.url
-
     start:
-      command: pnpm start --port 3000
+      command: pnpm preview
       port: 3000
       env:
         vars:
           TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
           TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
-          FRONTEND_URL: routing.client.url
-      
     build:
       commands:
         - pnpm build
@@ -40,47 +36,18 @@ services:
         vars:
           TAYLORDB_BASE_URL: vars.TAYLORDB_INTERNAL_BASE_URL
           TAYLORDB_SERVER_ID: vars.TAYLORDB_SERVER_ID
-          FRONTEND_URL: routing.client.url
-  
-  client:
-    workDir: apps/client
-    publicEnvPrefix: VITE_
-    install:
-      commands:
-        - pnpm install
-    dev:
-      command: pnpm dev
-      port: 5173
-      env:
-        vars:
-          TRPC_URL: routing.server.url
-    start:
-      command: pnpm preview --port 5173
-      port: 5173
-      env:
-        vars:
-          TRPC_URL: routing.server.url
-      
-    build:
-      commands:
-        - pnpm build
-      env:
-        vars:
-          TRPC_URL: routing.server.url
 
 taylordb:
   version: 0.18.1
   types:
-    - output: apps/server/taylordb/types.ts
+    - output: apps/web/src/server/taylordb/types.ts
       format: typescript
       onChange:
         - pnpm lint
 
 preview:
-  service: client
+  service: web
 
 routing:
-  - path: /api
-    service: server
   - path: /
-    service: client
+    service: web
